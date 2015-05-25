@@ -62,10 +62,12 @@ cpure x =
 cap :: Closure (a -> b) -> Closure a -> Closure b
 cap = Ap
 
--- | Reify constraints as /static dictionaries/. That is, obtain
--- a representation as a first class value of the implicit dictionary
--- corresponding to type class constraints in function signatures. This value
--- can be passed around and serialized, just like any other 'Closure'.
+-- | Get the serializable dictionary for some constraint. This type class is
+-- useful for avoiding having to pass around serializable dictionaries
+-- explicitly. A constraint of the form @ClosureDict c@ for some constraint @c@
+-- implies @c@. So that a @ClosureDict (Show a)@ constraint in a type signature
+-- for a function is equivalent to @Show a@, except that the function can grab
+-- the serializable dictionary corresponding to that constraint.
 class c => ClosureDict c where
   -- | A static dictionary corresponding to the instance.
   closureDict :: Closure (Dict c)
