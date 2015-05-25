@@ -17,7 +17,7 @@ library
   exposed-modules:     Control.Distributed.Closure
                        Control.Distributed.Closure.Internal
                        Control.Distributed.Closure.TH
-  build-depends:       base >=4.8
+  build-depends:       base >=4.8 && <5
                      , binary >= 0.7
                      , bytestring >= 0.10
                      , constraints >= 0.4
