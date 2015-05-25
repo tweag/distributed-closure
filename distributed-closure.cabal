@@ -1,8 +1,8 @@
 name:                distributed-closure
 version:             0.1.0.0
 synopsis:            Serializable closures for distributed programming.
--- description:
-homepage:            github.com/tweag/distributed-closure
+description:         See README.
+homepage:            https://github.com/tweag/distributed-closure
 license:             BSD3
 license-file:        LICENSE
 author:              Mathieu Boespflug
@@ -10,8 +10,12 @@ maintainer:          m@tweag.io
 copyright:           © Tweag I/O Limited
 category:            Control
 build-type:          Simple
--- extra-source-files:
+extra-source-files:  README.md
 cabal-version:       >=1.10
+
+source-repository head
+  type:     git
+  location: https://github.com/tweag/distributed-closure
 
 library
   exposed-modules:     Control.Distributed.Closure
