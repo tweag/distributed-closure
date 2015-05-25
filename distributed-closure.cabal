@@ -1,0 +1,27 @@
+name:                distributed-closure
+version:             0.1.0.0
+synopsis:            Serializable closures for distributed programming.
+-- description:
+homepage:            github.com/tweag/distributed-closure
+license:             BSD3
+license-file:        LICENSE
+author:              Mathieu Boespflug
+maintainer:          m@tweag.io
+copyright:           © Tweag I/O Limited
+category:            Control
+build-type:          Simple
+-- extra-source-files:
+cabal-version:       >=1.10
+
+library
+  exposed-modules:     Control.Distributed.Closure
+                       Control.Distributed.Closure.Internal
+                       Control.Distributed.Closure.TH
+  build-depends:       base >=4.8
+                     , binary >= 0.7
+                     , bytestring >= 0.10
+                     , constraints >= 0.4
+                     , semigroupoids >= 4
+                     , template-haskell >= 2.10
+  hs-source-dirs:      src
+  default-language:    Haskell2010
