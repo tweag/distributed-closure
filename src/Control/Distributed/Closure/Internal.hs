@@ -9,9 +9,22 @@
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
 
+-- | Private internals. You should not use this module unless you are determined
+-- to monkey with the internals. This module comes with no API stability
+-- guarantees whatsoever. Use at your own risks.
+
 {-# OPTIONS_GHC -funbox-strict-fields #-}
 
-module Control.Distributed.Closure.Internal where
+module Control.Distributed.Closure.Internal
+  ( Serializable
+  , Closure(..)
+  , closure
+  , unclosure
+  , cpure
+  , cap
+  , Dict(..)
+  , ClosureDict(..)
+  ) where
 
 import           Data.Binary (Binary, decode, encode)
 import           Data.Constraint (Dict(..), (:-)(..), mapDict)
@@ -20,6 +33,7 @@ import qualified Data.ByteString.Lazy as BSL
 import           Data.ByteString.Lazy (ByteString)
 import           GHC.StaticPtr
 
+-- | Values that can be sent across the network.
 class (Binary a, Typeable a) => Serializable a
 instance (Binary a, Typeable a) => Serializable a
 
