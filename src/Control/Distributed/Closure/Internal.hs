@@ -38,13 +38,11 @@ data Closure a where
 closure :: StaticPtr a -> Closure a
 closure = StaticPtr
 
-unstatic = undefined
-
 -- | Resolve a 'Closure' to the value that it represents.
 unclosure :: Closure a -> a
-unclosure (StaticPtr sptr) = unstatic sptr
+unclosure (StaticPtr sptr) = deRefStaticPtr sptr
 unclosure (Encoded x) = x
-unclosure (Ap cf cx) = (unstatic cf) (unstatic cx)
+unclosure (Ap cf cx) = (unclosure cf) (unclosure cx)
 unclosure (Closure cx x) = x
 
 decodeD :: Dict (Serializable a) -> ByteString -> a
