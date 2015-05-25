@@ -35,16 +35,18 @@ import           Data.Constraint (Dict(..))
 -- 'Closure'. A /serializable dictionary/ for some constraint @c@ is a value of
 -- type @'Closure' ('Dict' c)@.
 
-deriveClosureDict [t| Serializable () |]
+
+
+deriveClosureDict [d| instance Serializable () |]
 deriveClosureDict
-  [t| forall a b. (Serializable a, Serializable b) => Serializable (a, b) |]
+  [d| instance (Serializable a, Serializable b) => Serializable (a, b) |]
 deriveClosureDict
-  [t| forall a b c. (Serializable a, Serializable b, Serializable c) => Serializable (a, b, c) |]
+  [d| instance (Serializable a, Serializable b, Serializable c) => Serializable (a, b, c) |]
 deriveClosureDict
-  [t| forall a b c d. (Serializable a, Serializable b, Serializable c, Serializable d) => Serializable (a, b, c, d) |]
+  [d| instance (Serializable a, Serializable b, Serializable c, Serializable d) => Serializable (a, b, c, d) |]
 deriveClosureDict
-  [t| forall a b c d e. (Serializable a, Serializable b, Serializable c, Serializable d, Serializable e) => Serializable (a, b, c, d, e) |]
+  [d| instance (Serializable a, Serializable b, Serializable c, Serializable d, Serializable e) => Serializable (a, b, c, d, e) |]
 deriveClosureDict
-  [t| forall a b c d e f. (Serializable a, Serializable b, Serializable c, Serializable d, Serializable e, Serializable f) => Serializable (a, b, c, d, e, f) |]
+  [d| instance (Serializable a, Serializable b, Serializable c, Serializable d, Serializable e, Serializable f) => Serializable (a, b, c, d, e, f) |]
 deriveClosureDict
-  [t| forall a b c d e f g. (Serializable a, Serializable b, Serializable c, Serializable d, Serializable e, Serializable f, Serializable g) => Serializable (a, b, c, d, e, f, g) |]
+  [d| instance (Serializable a, Serializable b, Serializable c, Serializable d, Serializable e, Serializable f, Serializable g) => Serializable (a, b, c, d, e, f, g) |]
