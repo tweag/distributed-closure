@@ -1,4 +1,4 @@
 language: haskell
 
 ghc:
- - 7.10
+ - '7.10'
