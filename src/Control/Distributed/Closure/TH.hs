@@ -25,6 +25,8 @@ import qualified Language.Haskell.TH as TH
 -- > instance ClosureDict (Eq Bool) where closureDict = closure (static Dict)
 -- > instance (ClosureDict (Eq a), ClosureDict (Eq b)) => ClosureDict (Eq (a, b)) where ...
 -- > instance ClosureDict (Typeable a) => ClosureDict (Serializable (Proxy a)) where ...
+--
+-- This function *require* ScopedTypeVariable language extension.
 deriveClosureDict :: TH.Q [TH.InstanceDec] -> TH.DecsQ
 deriveClosureDict = (>>= liftM concat . mapM go)
   where
