@@ -21,9 +21,11 @@
 module Control.Distributed.Closure.Internal
   ( Serializable
   , Closure(..)
+  , Appliance
   , closure
   , unclosure
-  , cpure
+  , value
+  , share
   , cap
   , Dict(..)
   , ClosureDict(..)
@@ -32,6 +34,7 @@ module Control.Distributed.Closure.Internal
 import           Data.Binary (Binary(..), decode, encode)
 import           Data.Binary.Get
 import           Data.Binary.Put
+import           Data.Appliance
 import           Data.Constraint (Dict(..), (:-)(..), mapDict)
 import           Data.Typeable (Typeable)
 import qualified Data.ByteString.Lazy as BSL
@@ -81,9 +84,23 @@ instance Binary (Closure a) where
               return (Closure x (unclosure x))
       _ -> error "not supported"
 
+instance Appliance Closure where
+  (<.>) = Ap
+
 -- | Lift a Static pointer to a closure with an empty environment.
 closure :: StaticPtr a -> Closure a
 closure = CStaticPtr
+
+-- | A closure can be created from any serializable value. 'cpure' corresponds
+-- to "Control.Applicative"'s 'Control.Applicative.pure', but restricted to
+-- lifting serializable values only.
+value :: ClosureDict (Serializable a) => a -> Closure a
+value x = Value closureDict (encode x)
+
+-- | Explicitly share closure resulting along other computations
+share :: Closure a -> Closure a
+share s@Closure{} = s
+share s           = Closure s (unclosure s)
 
 -- | Resolve a 'Closure' to the value that it represents.
 unclosure :: Closure a -> a
@@ -95,16 +112,10 @@ unclosure (Closure _ x) = x
 decodeD :: Dict (Serializable a) -> ByteString -> a
 decodeD Dict = decode
 
--- | A closure can be created from any serializable value. 'cpure' corresponds
--- to "Control.Applicative"'s 'Control.Applicative.pure', but restricted to
--- lifting serializable values only.
-cpure :: ClosureDict (Serializable a) => a -> Closure a
-cpure x = Value closureDict (encode x)
-
 -- | Closure application. Note that 'Closure' is not a functor, let alone an
 -- applicative functor, even if it too has a meaningful notion of application.
 cap :: Closure (a -> b) -> Closure a -> Closure b
-cap = Ap
+cap = (<.>)
 
 -- | Get the serializable dictionary for some constraint. This type class is
 -- useful for avoiding having to pass around serializable dictionaries

@@ -14,8 +14,9 @@ module Control.Distributed.Closure
   , Closure
   , closure
   , unclosure
-  , cpure
-  , cap
+  , value
+  , share
+  , Appliance(..)
     -- * Closure dictionaries
     -- $serializable-dicts
   , Dict(..)
