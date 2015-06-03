@@ -26,6 +26,7 @@ module Control.Distributed.Closure
 import           Control.Distributed.Closure.TH
 import           Control.Distributed.Closure.Internal
 import           Data.Constraint (Dict(..))
+import           Data.Appliance
 
 -- $serializable-dicts
 --
@@ -39,6 +40,10 @@ import           Data.Constraint (Dict(..))
 
 
 deriveClosureDict [d| instance Serializable () |]
+deriveClosureDict [d| instance Serializable Int |]
+deriveClosureDict [d| instance Serializable Bool|]
+deriveClosureDict [d| instance Serializable Integer |]
+deriveClosureDict [d| instance Serializable a => Serializable [a] |]
 deriveClosureDict
   [d| instance (Serializable a, Serializable b) => Serializable (a, b) |]
 deriveClosureDict
