@@ -5,10 +5,13 @@
 
 module Control.Distributed.Closure.TH where
 
-import           Control.Monad (liftM)
-import           Data.Constraint (Dict(..), (:-)(..), mapDict)
+import           Control.Monad (liftM, replicateM)
 import           Control.Distributed.Closure.Internal
+import           Data.Constraint (Dict(..), (:-)(..), mapDict)
+import           Data.List (nub)
+import           Data.Typeable (Typeable)
 import           GHC.StaticPtr
+import           Data.Generics.Schemes (listify)
 import qualified Language.Haskell.TH as TH
 
 -- | Derive a 'ClosureDict' instance for the given instance context and instance
@@ -29,9 +32,23 @@ deriveClosureDict :: TH.Q [TH.InstanceDec] -> TH.DecsQ
 deriveClosureDict = (>>= liftM concat . mapM go)
   where
     go (TH.InstanceD cxt hd _) = do
-        let constraintQ = return $ foldl TH.AppT (TH.TupleT (length cxt)) cxt
+        let -- Typeable constraints for all type variables.
+            typeableCtx =
+                mapM (\var -> [t| Typeable $(return var) |]) $
+                nub $
+                listify (\case TH.VarT _ -> True; _ -> False) cxt ++
+                listify (\case TH.VarT _ -> True; _ -> False) hd
+        constraints <- (cxt ++) <$> typeableCtx
+        let constraintQ =
+              return $
+              foldl TH.AppT (TH.TupleT (length constraints)) constraints
             hdQ = return hd
         [d| instance ClosureDict $constraintQ => ClosureDict $hdQ where
               closureDict =
                   closure (static (mapDict (Sub Dict)))
                     `cap` (closureDict :: Closure (Dict $constraintQ)) |]
+
+forallInstances :: TH.Name -> (TH.Q [TH.InstanceDec] -> TH.DecsQ) -> TH.DecsQ
+forallInstances cls f = do
+    c <- TH.newName "c"
+    f (TH.reifyInstances cls [TH.VarT c])
