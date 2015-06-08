@@ -21,7 +21,7 @@ module Control.Distributed.Closure.Internal
   ) where
 
 import Data.Binary (Binary(..), Get, Put, decode, encode)
-import Data.Binary.Put (putLazyByteString, putWord8)
+import Data.Binary.Put (putWord8)
 import Data.Binary.Get (getWord8)
 import Data.Constraint (Dict(..))
 import Data.Typeable (Typeable)
@@ -69,9 +69,9 @@ dynClosureApply (DynClosure x1) (DynClosure x2) =
 -- a@ constraint, i.e. for /any/ @a@, is safe.
 putClosure :: Closure a -> Put
 putClosure (StaticPtr sptr) = putWord8 0 >> put (staticKey sptr)
-putClosure (Encoded bs) = putWord8 1 >> putLazyByteString bs
+putClosure (Encoded bs) = putWord8 1 >> put bs
 putClosure (Ap clos1 clos2) = putWord8 2 >> putClosure clos1 >> putClosure clos2
-putClosure (Closure _ c) = putClosure c
+putClosure (Closure _ clos) = putClosure clos
 
 getDynClosure :: Get DynClosure
 getDynClosure = getWord8 >>= \case
