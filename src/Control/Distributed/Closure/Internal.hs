@@ -20,11 +20,16 @@ module Control.Distributed.Closure.Internal
   , cmap
   ) where
 
-import           Data.Binary (Binary, decode, encode)
+import Data.Binary (Binary(..), Get, Put, decode, encode)
+import Data.Binary.Put (putLazyByteString, putWord8)
+import Data.Binary.Get (getWord8)
 import Data.Constraint (Dict(..))
 import Data.Typeable (Typeable)
 import Data.ByteString.Lazy (ByteString)
+import GHC.Base (Any)
 import GHC.StaticPtr
+import Unsafe.Coerce (unsafeCoerce) -- for dynClosureApply
+import System.IO.Unsafe (unsafePerformIO)
 
 -- | Values that can be sent across the network.
 type Serializable a = (Binary a, Typeable a)
@@ -39,6 +44,48 @@ data Closure a where
   Encoded :: !ByteString -> Closure ByteString
   Ap :: !(Closure (b -> c)) -> !(Closure b) -> Closure c
   Closure :: Closure a -> a -> Closure a
+
+-- Will be obsoleted by https://ghc.haskell.org/trac/ghc/wiki/Typeable. We use
+-- our own datatype instead of Dynamic in order to support dynClosureApply.
+newtype DynClosure = DynClosure Any -- invariant: only values of type Closure.
+
+-- | Until GHC.StaticPtr can give us a proper TypeRep upon decoding, we have to
+-- pretend that this function doesn't need a 'Typeable' constraint to be safe.
+toDynClosure :: Closure a -> DynClosure
+toDynClosure = DynClosure . unsafeCoerce
+
+fromDynClosure :: Typeable a => DynClosure -> Closure a
+fromDynClosure (DynClosure x) = unsafeCoerce x
+
+dynClosureApply :: DynClosure -> DynClosure -> DynClosure
+dynClosureApply (DynClosure x1) (DynClosure x2) =
+    case unsafeCoerce x1 of
+      (clos1 :: Closure (a -> b)) -> case unsafeCoerce x2 of
+        (clos2 :: Closure a) -> DynClosure $ unsafeCoerce $ Ap clos1 clos2
+
+-- | Until GHC.StaticPtr can give us a proper TypeRep upon decoding, we have to
+-- pretend that serializing/deserializing a @'Closure' a@ without a @'Typeable'
+-- a@ constraint, i.e. for /any/ @a@, is safe.
+putClosure :: Closure a -> Put
+putClosure (StaticPtr sptr) = putWord8 0 >> put (staticKey sptr)
+putClosure (Encoded bs) = putWord8 1 >> putLazyByteString bs
+putClosure (Ap clos1 clos2) = putWord8 2 >> putClosure clos1 >> putClosure clos2
+putClosure (Closure _ c) = putClosure c
+
+getDynClosure :: Get DynClosure
+getDynClosure = getWord8 >>= \case
+    0 -> get >>= \key -> case unsafePerformIO (unsafeLookupStaticPtr key) of
+           Just sptr -> return $ toDynClosure $ StaticPtr sptr
+           Nothing -> fail $ "Static pointer lookup failed: " ++ show key
+    1 -> toDynClosure . Encoded <$> get
+    2 -> dynClosureApply <$> getDynClosure <*> getDynClosure
+    _ -> fail "Binary.get(Closure): unrecognized tag."
+
+instance Typeable a => Binary (Closure a) where
+  put = putClosure
+  get = do
+      clos <- fromDynClosure <$> getDynClosure
+      return $ Closure (unclosure clos) clos
 
 -- | Lift a Static pointer to a closure with an empty environment.
 closure :: StaticPtr a -> Closure a
