@@ -34,8 +34,7 @@ import           Data.ByteString.Lazy (ByteString)
 import           GHC.StaticPtr
 
 -- | Values that can be sent across the network.
-class (Binary a, Typeable a) => Serializable a
-instance (Binary a, Typeable a) => Serializable a
+type Serializable a = (Binary a, Typeable a)
 
 -- | Type of serializable closures. Abstractly speaking, a closure is a code
 -- reference paired together with an environment. A serializable closure
