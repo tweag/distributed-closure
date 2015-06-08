@@ -16,6 +16,7 @@ module Control.Distributed.Closure
   , unclosure
   , cpure
   , cap
+  , cmap
     -- * Closure dictionaries
     -- $serializable-dicts
   , Dict(..)

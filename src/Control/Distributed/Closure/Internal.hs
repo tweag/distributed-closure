@@ -21,6 +21,7 @@ module Control.Distributed.Closure.Internal
   , unclosure
   , cpure
   , cap
+  , cmap
   , Dict(..)
   , ClosureDict(..)
   ) where
@@ -75,12 +76,6 @@ cpure x =
 cap :: Closure (a -> b) -> Closure a -> Closure b
 cap = Ap
 
--- | Get the serializable dictionary for some constraint. This type class is
--- useful for avoiding having to pass around serializable dictionaries
--- explicitly. A constraint of the form @ClosureDict c@ for some constraint @c@
--- implies @c@. So that a @ClosureDict (Show a)@ constraint in a type signature
--- for a function is equivalent to @Show a@, except that the function can grab
--- the serializable dictionary corresponding to that constraint.
 class c => ClosureDict c where
   -- | A static dictionary corresponding to the instance.
   closureDict :: Closure (Dict c)
@@ -184,3 +179,9 @@ instance ( ClosureDict a, Typeable a
       `cap` (closureDict :: Closure (Dict f))
       `cap` (closureDict :: Closure (Dict g))
       `cap` (closureDict :: Closure (Dict h))
+
+-- | 'Closure' is not a 'Functor', in that we cannot map arbitrary functions
+-- over it. That is, we cannot define 'fmap'. However, we can map a static
+-- pointer to a function over a 'Closure'.
+cmap :: StaticPtr (a -> b) -> Closure a -> Closure b
+cmap = Ap . StaticPtr
