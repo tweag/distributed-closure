@@ -40,10 +40,11 @@ type Serializable a = (Binary a, Typeable a)
 -- serialized only if all expressions captured in the environment are
 -- serializable.
 data Closure a where
-  StaticPtr :: !(StaticPtr b) -> Closure b
+  StaticPtr :: !(StaticPtr a) -> Closure a
   Encoded :: !ByteString -> Closure ByteString
-  Ap :: !(Closure (b -> c)) -> !(Closure b) -> Closure c
-  Closure :: Closure a -> a -> Closure a
+  Ap :: !(Closure (a -> b)) -> !(Closure a) -> Closure b
+  -- | Cache the value a closure resolves to.
+  Closure :: a -> !(Closure a) -> Closure a
 
 -- Will be obsoleted by https://ghc.haskell.org/trac/ghc/wiki/Typeable. We use
 -- our own datatype instead of Dynamic in order to support dynClosureApply.
@@ -89,14 +90,16 @@ instance Typeable a => Binary (Closure a) where
 
 -- | Lift a Static pointer to a closure with an empty environment.
 closure :: StaticPtr a -> Closure a
-closure = StaticPtr
+closure sptr = Closure (deRefStaticPtr sptr) (StaticPtr sptr)
 
--- | Resolve a 'Closure' to the value that it represents.
+-- | Resolve a 'Closure' to the value that it represents. Calling 'unclosure'
+-- multiple times on the same closure is efficient: for most argument values the
+-- result is memoized.
 unclosure :: Closure a -> a
 unclosure (StaticPtr sptr) = deRefStaticPtr sptr
 unclosure (Encoded x) = x
 unclosure (Ap cf cx) = (unclosure cf) (unclosure cx)
-unclosure (Closure cx x) = x
+unclosure (Closure x _) = x
 
 decodeD :: Dict (Serializable a) -> ByteString -> a
 decodeD Dict = decode
@@ -123,5 +126,5 @@ cap closf closx = Ap closf closx
 -- | 'Closure' is not a 'Functor', in that we cannot map arbitrary functions
 -- over it. That is, we cannot define 'fmap'. However, we can map a static
 -- pointer to a function over a 'Closure'.
-cmap :: StaticPtr (a -> b) -> Closure a -> Closure b
-cmap = Ap . StaticPtr
+cmap :: Typeable a => StaticPtr (a -> b) -> Closure a -> Closure b
+cmap sptr = cap (Closure (deRefStaticPtr sptr) (StaticPtr sptr))
