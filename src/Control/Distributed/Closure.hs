@@ -1,9 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE ScopedTypeVariables #-}
-{-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE UndecidableInstances #-}
-
 -- | Serializable closures for distributed programming.
 
 {-# OPTIONS_GHC -funbox-strict-fields #-}
@@ -20,12 +14,10 @@ module Control.Distributed.Closure
     -- * Closure dictionaries
     -- $serializable-dicts
   , Dict(..)
-  , ClosureDict(..)
   ) where
 
-import           Control.Distributed.Closure.TH
-import           Control.Distributed.Closure.Internal
-import           Data.Constraint (Dict(..))
+import Control.Distributed.Closure.Internal
+import Data.Constraint (Dict(..))
 
 -- $serializable-dicts
 --

@@ -1,12 +1,8 @@
 {-# LANGUAGE ConstraintKinds #-}
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE GADTs #-}
-{-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StaticPointers #-}
-{-# LANGUAGE TypeOperators #-}
-{-# LANGUAGE UndecidableInstances #-}
 
 -- | Private internals. You should not use this module unless you are determined
 -- to monkey with the internals. This module comes with no API stability
@@ -22,16 +18,13 @@ module Control.Distributed.Closure.Internal
   , cpure
   , cap
   , cmap
-  , Dict(..)
-  , ClosureDict(..)
   ) where
 
 import           Data.Binary (Binary, decode, encode)
-import           Data.Constraint (Dict(..), (:-)(..), mapDict)
-import           Data.Typeable (Typeable)
-import qualified Data.ByteString.Lazy as BSL
-import           Data.ByteString.Lazy (ByteString)
-import           GHC.StaticPtr
+import Data.Constraint (Dict(..))
+import Data.Typeable (Typeable)
+import Data.ByteString.Lazy (ByteString)
+import GHC.StaticPtr
 
 -- | Values that can be sent across the network.
 type Serializable a = (Binary a, Typeable a)
@@ -64,120 +57,21 @@ decodeD Dict = decode
 -- | A closure can be created from any serializable value. 'cpure' corresponds
 -- to "Control.Applicative"'s 'Control.Applicative.pure', but restricted to
 -- lifting serializable values only.
-cpure :: ClosureDict (Serializable a) => a -> Closure a
-cpure x =
+cpure :: Closure (Dict (Serializable a)) -> a -> Closure a
+cpure cdict x | Dict <- unclosure cdict =
+    Closure x $
     StaticPtr (static decodeD) `cap`
-    closureDict `cap`
+    cdict `cap`
     Encoded (encode x)
 
 -- | Closure application. Note that 'Closure' is not a functor, let alone an
 -- applicative functor, even if it too has a meaningful notion of application.
-cap :: Closure (a -> b) -> Closure a -> Closure b
-cap = Ap
-
-class c => ClosureDict c where
-  -- | A static dictionary corresponding to the instance.
-  closureDict :: Closure (Dict c)
-
-instance ClosureDict () where
-  closureDict = closure (static Dict)
-
-instance (ClosureDict a, Typeable a, ClosureDict b, Typeable b)
-      => ClosureDict (a, b) where
-  closureDict =
-    closure (static (\Dict Dict -> Dict))
-      `cap` (closureDict :: Closure (Dict a))
-      `cap` (closureDict :: Closure (Dict b))
-
-instance ( ClosureDict a, Typeable a
-         , ClosureDict b, Typeable b
-         , ClosureDict c, Typeable c
-         ) => ClosureDict (a, b, c) where
-  closureDict =
-    closure (static (\Dict Dict Dict -> Dict))
-      `cap` (closureDict :: Closure (Dict a))
-      `cap` (closureDict :: Closure (Dict b))
-      `cap` (closureDict :: Closure (Dict c))
-
-instance ( ClosureDict a, Typeable a
-         , ClosureDict b, Typeable b
-         , ClosureDict c, Typeable c
-         , ClosureDict d, Typeable d
-         ) => ClosureDict (a, b, c, d) where
-  closureDict =
-    closure (static (\Dict Dict Dict Dict -> Dict))
-      `cap` (closureDict :: Closure (Dict a))
-      `cap` (closureDict :: Closure (Dict b))
-      `cap` (closureDict :: Closure (Dict c))
-      `cap` (closureDict :: Closure (Dict d))
-
-instance ( ClosureDict a, Typeable a
-         , ClosureDict b, Typeable b
-         , ClosureDict c, Typeable c
-         , ClosureDict d, Typeable d
-         , ClosureDict e, Typeable e
-         ) => ClosureDict (a, b, c, d, e) where
-  closureDict =
-    closure (static (\Dict Dict Dict Dict Dict -> Dict))
-      `cap` (closureDict :: Closure (Dict a))
-      `cap` (closureDict :: Closure (Dict b))
-      `cap` (closureDict :: Closure (Dict c))
-      `cap` (closureDict :: Closure (Dict d))
-      `cap` (closureDict :: Closure (Dict e))
-
-instance ( ClosureDict a, Typeable a
-         , ClosureDict b, Typeable b
-         , ClosureDict c, Typeable c
-         , ClosureDict d, Typeable d
-         , ClosureDict e, Typeable e
-         , ClosureDict f, Typeable f
-         ) => ClosureDict (a, b, c, d, e, f) where
-  closureDict =
-    closure (static (\Dict Dict Dict Dict Dict Dict -> Dict))
-      `cap` (closureDict :: Closure (Dict a))
-      `cap` (closureDict :: Closure (Dict b))
-      `cap` (closureDict :: Closure (Dict c))
-      `cap` (closureDict :: Closure (Dict d))
-      `cap` (closureDict :: Closure (Dict e))
-      `cap` (closureDict :: Closure (Dict f))
-
-instance ( ClosureDict a, Typeable a
-         , ClosureDict b, Typeable b
-         , ClosureDict c, Typeable c
-         , ClosureDict d, Typeable d
-         , ClosureDict e, Typeable e
-         , ClosureDict f, Typeable f
-         , ClosureDict g, Typeable g
-         ) => ClosureDict (a, b, c, d, e, f, g) where
-  closureDict =
-    closure (static (\Dict Dict Dict Dict Dict Dict Dict -> Dict))
-      `cap` (closureDict :: Closure (Dict a))
-      `cap` (closureDict :: Closure (Dict b))
-      `cap` (closureDict :: Closure (Dict c))
-      `cap` (closureDict :: Closure (Dict d))
-      `cap` (closureDict :: Closure (Dict e))
-      `cap` (closureDict :: Closure (Dict f))
-      `cap` (closureDict :: Closure (Dict g))
-
-instance ( ClosureDict a, Typeable a
-         , ClosureDict b, Typeable b
-         , ClosureDict c, Typeable c
-         , ClosureDict d, Typeable d
-         , ClosureDict e, Typeable e
-         , ClosureDict f, Typeable f
-         , ClosureDict g, Typeable g
-         , ClosureDict h, Typeable h
-         ) => ClosureDict (a, b, c, d, e, f, g, h) where
-  closureDict =
-    closure (static (\Dict Dict Dict Dict Dict Dict Dict Dict -> Dict))
-      `cap` (closureDict :: Closure (Dict a))
-      `cap` (closureDict :: Closure (Dict b))
-      `cap` (closureDict :: Closure (Dict c))
-      `cap` (closureDict :: Closure (Dict d))
-      `cap` (closureDict :: Closure (Dict e))
-      `cap` (closureDict :: Closure (Dict f))
-      `cap` (closureDict :: Closure (Dict g))
-      `cap` (closureDict :: Closure (Dict h))
+cap :: Typeable a          -- XXX 'Typeable' constraint only for forward compat.
+    => Closure (a -> b)
+    -> Closure a
+    -> Closure b
+cap (Closure f closf) (Closure x closx) = Closure (f x) (Ap closf closx)
+cap closf closx = Ap closf closx
 
 -- | 'Closure' is not a 'Functor', in that we cannot map arbitrary functions
 -- over it. That is, we cannot define 'fmap'. However, we can map a static
