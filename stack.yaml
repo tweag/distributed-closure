@@ -1,0 +1,4 @@
+packages:
+- '.'
+- vendor/binary
+resolver: nightly-2015-06-05
