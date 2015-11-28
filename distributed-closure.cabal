@@ -22,7 +22,7 @@ library
                        Control.Distributed.Closure.Internal
                        Control.Distributed.Closure.TH
   build-depends:       base >=4.8 && <5
-                     , binary >= 0.7.5
+                     , binary >= 0.7.6
                      , bytestring >= 0.10
                      , constraints >= 0.4
                      , template-haskell >= 2.10
