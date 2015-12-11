@@ -7,6 +7,12 @@ env:
   - ARGS="--resolver lts-3"
   - ARGS="--resolver nightly"
 
+addons:
+  apt:
+    packages:
+      # Needed for GHC.
+    - libgmp-dev
+
 cache:
   directories:
   - $HOME/.stack
