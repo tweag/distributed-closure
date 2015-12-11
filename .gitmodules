@@ -1,3 +1,0 @@
-[submodule "vendor/binary"]
-	path = vendor/binary
-	url = https://github.com/kolmodin/binary
