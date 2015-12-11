@@ -14,7 +14,6 @@ install:
   - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
   - travis_retry cabal update
   - cabal sandbox init
-  - cabal sandbox add-source vendor/binary
   - cabal install --only-dependencies --enable-tests --enable-benchmarks
 
 script:
