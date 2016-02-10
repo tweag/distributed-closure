@@ -43,7 +43,7 @@ data Closure a where
   StaticPtr :: !(StaticPtr a) -> Closure a
   Encoded :: !ByteString -> Closure ByteString
   Ap :: !(Closure (a -> b)) -> !(Closure a) -> Closure b
-  -- | Cache the value a closure resolves to.
+  -- Cache the value a closure resolves to.
   Closure :: a -> !(Closure a) -> Closure a
 
 -- Will be obsoleted by https://ghc.haskell.org/trac/ghc/wiki/Typeable. We use
