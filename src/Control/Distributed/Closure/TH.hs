@@ -11,6 +11,10 @@ import           Data.Constraint (Dict(..))
 import qualified Language.Haskell.TH as TH
 import           Numeric.Natural
 
+-- | @$(cstatic 'foo)@ is an abbreviation for @closure (static foo)@.
+cstatic :: TH.Name -> TH.ExpQ
+cstatic f = [| closure (static $(TH.varE f)) |]
+
 -- | Abbreviation for @closure (static Dict)@. Example usage:
 --
 -- @
