@@ -1,5 +1,5 @@
 packages:
 - '.'
-resolver: lts-3.17
+resolver: lts-4.1
 extra-deps:
 - binary-0.7.6.1
