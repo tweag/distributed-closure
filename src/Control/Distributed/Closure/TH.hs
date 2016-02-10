@@ -1,7 +1,7 @@
 {-# LANGUAGE StaticPointers #-}
 {-# LANGUAGE TemplateHaskell #-}
 
--- | Utility Template Haskell functions.
+-- | Utility Template Haskell macros.
 
 module Control.Distributed.Closure.TH where
 
@@ -11,9 +11,21 @@ import           Data.Constraint (Dict(..))
 import qualified Language.Haskell.TH as TH
 import           Numeric.Natural
 
+-- | Abbreviation for @closure (static Dict)@. Example usage:
+--
+-- @
+-- foo :: Closure (Dict (Num a)) -> ...
+--
+-- foo $cdict ...
+-- @
 cdict :: TH.ExpQ
 cdict = cdictFrom 0
 
+-- | Create a static dictionary from the given dictionaries. Example usage:
+--
+-- @
+-- $cdictFrom 2 Dict Dict :: Closure (Static (Dict (Eq a, Show a)))
+-- @
 cdictFrom :: Natural -> TH.ExpQ
 cdictFrom n0 = apply abstract [| closure (static $(staticFun n0)) |] n0
   where
