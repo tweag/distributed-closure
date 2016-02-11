@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE GADTs #-}
 {-# LANGUAGE LambdaCase #-}
@@ -9,6 +10,7 @@
 -- guarantees whatsoever. Use at your own risks.
 
 {-# OPTIONS_GHC -funbox-strict-fields #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-} -- for binary < 0.7.6 compat.
 
 module Control.Distributed.Closure.Internal
   ( Serializable
@@ -27,6 +29,7 @@ import Data.Constraint (Dict(..))
 import Data.Typeable (Typeable)
 import Data.ByteString.Lazy (ByteString)
 import GHC.Base (Any)
+import GHC.Fingerprint
 import GHC.StaticPtr
 import Unsafe.Coerce (unsafeCoerce) -- for dynClosureApply
 import System.IO.Unsafe (unsafePerformIO)
@@ -81,6 +84,18 @@ getDynClosure = getWord8 >>= \case
     1 -> toDynClosure . Encoded <$> get
     2 -> dynClosureApply <$> getDynClosure <*> getDynClosure
     _ -> fail "Binary.get(Closure): unrecognized tag."
+
+#if !MIN_VERSION_binary(0,7,6)
+-- Orphan instance
+instance Binary Fingerprint where
+  put (Fingerprint x1 x2) = do
+      put x1
+      put x2
+  get = do
+      x1 <- get
+      x2 <- get
+      return $! Fingerprint x1 x2
+#endif
 
 instance Typeable a => Binary (Closure a) where
   put = putClosure
