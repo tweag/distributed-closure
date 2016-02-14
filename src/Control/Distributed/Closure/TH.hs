@@ -15,6 +15,12 @@ import           Numeric.Natural
 cstatic :: TH.Name -> TH.ExpQ
 cstatic f = [| closure (static $(TH.varE f)) |]
 
+-- | @$(cstaticDict 'foo)@ is an abbreviation for @closure (static foo) `cap`
+-- $cdict@, a common pattern for implicitly feeding the static dictionary when
+-- which dictionary to choose is clear from context.
+cstaticDict :: TH.Name -> TH.ExpQ
+cstaticDict f = [| closure (static $(TH.varE f)) `cap` $cdict |]
+
 -- | Abbreviation for @closure (static Dict)@. Example usage:
 --
 -- @
