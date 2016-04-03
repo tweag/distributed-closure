@@ -1,3 +1,4 @@
+{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StaticPointers #-}
@@ -13,6 +14,14 @@ import Data.Binary
 import Test.Hspec
 import Test.Hspec.QuickCheck
 import Test.QuickCheck
+
+data T a = T a
+
+-- Test that the result of this splice compiles.
+withStatic [d|
+  instance Show a => Show (T a) where show = undefined
+  instance (Eq a, Show a) => Eq (T a) where (==) = undefined
+  |]
 
 instance Arbitrary (Closure Int) where
   arbitrary = cpure $cdict <$> elements [0..4]

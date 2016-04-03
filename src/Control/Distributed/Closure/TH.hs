@@ -1,14 +1,24 @@
 {-# LANGUAGE StaticPointers #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeOperators #-}
 
 -- | Utility Template Haskell macros.
 
-module Control.Distributed.Closure.TH where
+module Control.Distributed.Closure.TH
+  ( cstatic
+  , cstaticDict
+  , cdict
+  , cdictFrom
+  , withStatic
+  ) where
 
 import           Control.Monad (replicateM)
-import           Control.Distributed.Closure.Internal
-import           Data.Constraint (Dict(..))
+import           Control.Distributed.Closure
+import           Data.Generics (everything, mkQ)
+import           Data.List (nub)
+import           Data.Typeable (Typeable)
 import qualified Language.Haskell.TH as TH
+import qualified Language.Haskell.TH.Syntax as TH
 import           Numeric.Natural
 
 -- | @$(cstatic 'foo)@ is an abbreviation for @closure (static foo)@.
@@ -46,3 +56,61 @@ cdictFrom n0 = apply abstract [| closure (static $(staticFun n0)) |] n0
         k names (foldl (\acc x -> [| $acc `cap` $(TH.varE x) |]) f names)
     abstract [] expr = expr
     abstract (nm:names) expr = [| \ $(TH.varP nm) -> $(abstract names expr) |]
+
+-- | Compute free variables of a type.
+fvT :: TH.Type -> [TH.Name]
+fvT = nub . everything (++) ([] `mkQ` (\ty -> [nm | TH.VarT nm <- [ty]]))
+
+caps :: [TH.ExpQ] -> TH.ExpQ
+caps = foldl1 (\f x -> [| $f `cap` $x|])
+
+-- XXX It turns out that GHC's newName doesn't produce really fresh names. Call
+-- newName twice to define two new globals and you'll find they share the same
+-- name. A workaround mentioned in https://ghc.haskell.org/trac/ghc/ticket/5398
+-- is this snippet of code...
+mangleName :: TH.Name -> TH.Name
+mangleName name@(TH.Name occ fl) = case fl of
+    TH.NameU u -> TH.Name (mangle_occ u) fl
+    _ -> name
+  where
+    mangle_occ :: Int -> TH.OccName
+    mangle_occ uniq = TH.mkOccName (TH.occString occ ++ "_" ++ show uniq)
+
+-- | Auto-generates the 'Static' instances corresponding to the given class
+-- instances. Example:
+--
+-- @
+-- data T a = T a
+--
+-- withStatic [d| instance Show a => Show (T a) where ... |]
+-- ======>
+-- instance Show a => Show (T a) where ...
+-- instance (Static (Show a), Typeable a) => Static (Show (T a)) where
+--   closureDict = closure (static (Dict -> Dict)) `cap` closureDict
+-- @
+withStatic :: TH.DecsQ -> TH.DecsQ
+withStatic = (>>= go)
+  where
+    go [] = return []
+    go (ins@(TH.InstanceD cxt hd _):decls) = do
+        let n = length cxt
+        dictsigs <- mapM (\c -> [t| Dict $(return c) |]) cxt
+        retsig <- [t| Dict $(return hd) |]
+        f <- mangleName <$> TH.newName "static_helper"
+        fbody <- foldr (\_ body -> [| \Dict -> $body |]) [| Dict |] cxt
+        let tyf = foldr (\a b -> TH.ArrowT `TH.AppT` a `TH.AppT` b) retsig dictsigs
+            sigf = TH.SigD f (TH.ForallT (map TH.PlainTV (fvT tyf)) [] tyf)
+            declf = TH.ValD (TH.VarP f) (TH.NormalB fbody) []
+        methods <- (:[]) <$>
+          TH.valD
+            (TH.varP 'closureDict)
+            (TH.normalB (caps (cstatic f : replicate n [| closureDict |])))
+            []
+        staticcxt <- (++) <$>
+          mapM (\c -> [t| Static $(return c) |]) cxt <*>
+          mapM (\var -> [t| Typeable $(TH.varT var) |]) (fvT tyf)
+        statichd <- [t| Static $(return hd) |]
+        let staticins = TH.InstanceD staticcxt statichd methods
+        decls' <- go decls
+        return (ins : sigf : declf : staticins : decls')
+    go (decl:decls) = (decl:) <$> go decls
