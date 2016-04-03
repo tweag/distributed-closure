@@ -3,6 +3,8 @@
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE StaticPointers #-}
+{-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
 
@@ -23,6 +25,8 @@ module Control.Distributed.Closure
 
 import Control.Distributed.Closure.Internal
 import Data.Constraint (Dict(..))
+import Data.Typeable (Typeable)
+import Unsafe.Coerce (unsafeCoerce)
 
 -- $static-dicts
 --
@@ -42,3 +46,6 @@ import Data.Constraint (Dict(..))
 -- 'Control.Distributed.Closure.TH.withStatic' if it becomes too tedious.
 class c => Static c where
   closureDict :: Closure (Dict c)
+
+instance (a ~ b, Typeable a, Typeable b) => Static (a ~ b) where
+  closureDict = unsafeCoerce $ closure (static (Dict :: Dict ()))
