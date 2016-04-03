@@ -1,7 +1,5 @@
 -- | Serializable closures for distributed programming.
 
-{-# OPTIONS_GHC -funbox-strict-fields #-}
-
 module Control.Distributed.Closure
   ( Serializable
     -- * Closures
