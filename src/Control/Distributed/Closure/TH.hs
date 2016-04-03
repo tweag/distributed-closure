@@ -34,7 +34,7 @@ cdict = cdictFrom 0
 -- | Create a static dictionary from the given dictionaries. Example usage:
 --
 -- @
--- $cdictFrom 2 Dict Dict :: Closure (Static (Dict (Eq a, Show a)))
+-- $cdictFrom 2 $cdict $cdict :: Closure (Static (Dict (Eq a, Show a)))
 -- @
 cdictFrom :: Natural -> TH.ExpQ
 cdictFrom n0 = apply abstract [| closure (static $(staticFun n0)) |] n0
