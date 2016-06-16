@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 {-# LANGUAGE StaticPointers #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeOperators #-}
@@ -92,7 +93,11 @@ withStatic :: TH.DecsQ -> TH.DecsQ
 withStatic = (>>= go)
   where
     go [] = return []
+#if MIN_VERSION_template_haskell(2,11,0)
+    go (ins@(TH.InstanceD overlap cxt hd _):decls) = do
+#else
     go (ins@(TH.InstanceD cxt hd _):decls) = do
+#endif
         let n = length cxt
         dictsigs <- mapM (\c -> [t| Dict $(return c) |]) cxt
         retsig <- [t| Dict $(return hd) |]
@@ -110,7 +115,11 @@ withStatic = (>>= go)
           mapM (\c -> [t| Static $(return c) |]) cxt <*>
           mapM (\var -> [t| Typeable $(TH.varT var) |]) (fvT tyf)
         statichd <- [t| Static $(return hd) |]
+#if MIN_VERSION_template_haskell(2,11,0)
+        let staticins = TH.InstanceD overlap staticcxt statichd methods
+#else
         let staticins = TH.InstanceD staticcxt statichd methods
+#endif
         decls' <- go decls
         return (ins : sigf : declf : staticins : decls')
     go (decl:decls) = (decl:) <$> go decls
