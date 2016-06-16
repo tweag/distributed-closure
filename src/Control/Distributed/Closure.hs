@@ -1,6 +1,6 @@
 -- | Serializable closures for distributed programming. This package builds
 -- a "remotable closure" abstraction on top of
--- <https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/static-pointers.html static pointers>.
+-- <https://downloads.haskell.org/~ghc/latest/docs/html/users_guide/glasgow_exts.html#static-pointers static pointers>.
 -- See
 -- <https://ocharles.org.uk/blog/guest-posts/2014-12-23-static-pointers.html this blog post>
 -- for a longer introduction.
