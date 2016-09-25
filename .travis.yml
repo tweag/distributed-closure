@@ -6,6 +6,8 @@ env:
   - ARGS="--resolver lts-2"
   - ARGS="--resolver lts-3"
   - ARGS="--resolver lts-5"
+  - ARGS="--resolver lts-6"
+  - ARGS="--resolver lts-7"
   - ARGS="--resolver nightly"
 
 addons:
