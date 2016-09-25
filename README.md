@@ -31,4 +31,4 @@ main = do
 
 `distributed-closure` does not implement sending/receiving/spawning
 closures - that's left for higher-level frameworks. Only closure
-composition and (de)serialization.
+creation, composition and (de)serialization.
