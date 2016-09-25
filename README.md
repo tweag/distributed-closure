@@ -21,6 +21,12 @@ In GHC 8 and above, remoting a computation on another node using this
 library goes along the lines of
 
 ```Haskell
+data NodeId
+
+-- Assume we're given a spaw primitive.
+spawn :: NodeId -> Closure (IO ()) -> IO ()
+
+-- A computation to remote on another node.
 hello :: String -> IO ()
 hello name = putStrLn ("Hello, " ++ name)
 
