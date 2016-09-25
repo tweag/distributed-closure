@@ -10,7 +10,9 @@
 -- guarantees whatsoever. Use at your own risks.
 
 {-# OPTIONS_GHC -funbox-strict-fields #-}
+#if !MIN_VERSION_binary(0,7,6)
 {-# OPTIONS_GHC -fno-warn-orphans #-} -- for binary < 0.7.6 compat.
+#endif
 #if __GLASGOW_HASKELL__ >= 800
 {-# OPTIONS_GHC -fno-warn-redundant-constraints #-}
 #endif
@@ -32,7 +34,7 @@ import Data.Constraint (Dict(..))
 import Data.Typeable (Typeable)
 import Data.ByteString.Lazy (ByteString)
 import GHC.Base (Any)
-#if __GLASGOW_HASKELL__ < 800
+#if !MIN_VERSION_binary(0,7,6)
 import GHC.Fingerprint
 #endif
 import GHC.StaticPtr
