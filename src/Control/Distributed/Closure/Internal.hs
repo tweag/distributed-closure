@@ -9,7 +9,6 @@
 -- to monkey with the internals. This module comes with no API stability
 -- guarantees whatsoever. Use at your own risks.
 
-{-# OPTIONS_GHC -funbox-strict-fields #-}
 #if !MIN_VERSION_binary(0,7,6)
 {-# OPTIONS_GHC -fno-warn-orphans #-} -- for binary < 0.7.6 compat.
 #endif
@@ -50,6 +49,7 @@ type Serializable a = (Binary a, Typeable a)
 -- serialized only if all expressions captured in the environment are
 -- serializable.
 data Closure a where
+  -- XXX Can't unpack because of https://ghc.haskell.org/trac/ghc/ticket/12622.
   StaticPtr :: !(StaticPtr a) -> Closure a
   Encoded :: !ByteString -> Closure ByteString
   Ap :: !(Closure (a -> b)) -> !(Closure a) -> Closure b
