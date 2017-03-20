@@ -56,6 +56,11 @@ data Closure a where
   -- Cache the value a closure resolves to.
   Closure :: a -> !(Closure a) -> Closure a
 
+#if MIN_VERSION_base(4,9,0)
+instance IsStatic Closure where
+  fromStaticPtr = closure
+#endif
+
 -- Will be obsoleted by https://ghc.haskell.org/trac/ghc/wiki/Typeable. We use
 -- our own datatype instead of Dynamic in order to support dynClosureApply.
 newtype DynClosure = DynClosure Any -- invariant: only values of type Closure.
