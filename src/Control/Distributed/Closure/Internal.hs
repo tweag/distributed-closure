@@ -166,4 +166,5 @@ cap closf closx = Ap closf closx
 -- over it. That is, we cannot define 'fmap'. However, we can map a static
 -- pointer to a function over a 'Closure'.
 cmap :: Typeable a => StaticPtr (a -> b) -> Closure a -> Closure b
-cmap sptr = cap (Closure (deRefStaticPtr sptr) (StaticPtr sptr))
+cmap sf = cap (closure sf)
+{-# DEPRECATED cmap "Use staticMap instead." #-}
