@@ -19,6 +19,7 @@ source-repository head
 
 library
   exposed-modules:     Control.Distributed.Closure
+                       Control.Distributed.Closure.Class
                        Control.Distributed.Closure.Internal
                        Control.Distributed.Closure.TH
   build-depends:       base >=4.8 && <5
