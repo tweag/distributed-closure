@@ -24,6 +24,7 @@ module Control.Distributed.Closure
   , cpure
   , cap
   , cmap
+  , cduplicate
     -- * Closure dictionaries
     -- $static-dicts
   , Dict(..)
