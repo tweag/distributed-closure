@@ -21,6 +21,7 @@ library
   exposed-modules:     Control.Distributed.Closure
                        Control.Distributed.Closure.Internal
                        Control.Distributed.Closure.TH
+                       Control.Distributed.StaticPtr
   build-depends:       base >=4.8 && <5
                      , binary >= 0.7.5
                      , bytestring >= 0.10
