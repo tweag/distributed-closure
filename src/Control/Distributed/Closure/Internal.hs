@@ -137,6 +137,7 @@ unclosure (Ap cf cx) = (unclosure cf) (unclosure cx)
 unclosure (Closure x _) = x
 unclosure (Duplicate x) = x
 
+-- | Turn a closure into a closure of a closure.
 cduplicate :: Closure a -> Closure (Closure a)
 cduplicate = Duplicate
 
