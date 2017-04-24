@@ -58,8 +58,5 @@ main = hspec $ do
         unclosure (f `cap` x) == (unclosure f) (unclosure x)
 
     describe "serialization" $ do
-      prop "equal closures have equal serializations" $ \x y ->
-          (unclosure x :: Int) == (unclosure y :: Int) ==> encode x == encode y
-
       prop "decode is left inverse to encode" $ \v ->
           unclosure ((decode . encode) v) == unclosure (v :: Closure Int)
