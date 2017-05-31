@@ -4,6 +4,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE StaticPointers #-}
 {-# LANGUAGE TemplateHaskell #-}
+{-# LANGUAGE TypeApplications #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
@@ -79,16 +80,31 @@ genSimple (Zero TInt) = genPure
 genSimple (Zero TBool) = genPure
 genSimple (One TInt TInt) = genStatic
 genSimple (One TBool TInt) = genStatic
-genSimple (One TInt TBool) = genStatic
+genSimple (One TInt TBool) = genStatic `gap` genPure @Int
 genSimple (One TBool TBool) = genStatic
 genSimple (Two TInt TInt TInt) = genStatic
-genSimple (Two TBool TInt TInt) = genStatic
+genSimple (Two TBool TInt TInt) = gflip genStatic
 genSimple (Two TInt TBool TInt) = genStatic
 genSimple (Two TBool TBool TInt) = genStatic
 genSimple (Two TInt TInt TBool) = genStatic
 genSimple (Two TBool TInt TBool) = genStatic
-genSimple (Two TInt TBool TBool) = genStatic
+genSimple (Two TInt TBool TBool) = gflip genStatic
 genSimple (Two TBool TBool TBool) = genStatic
+
+gflip
+  :: (Typeable a, Typeable b, Typeable c)
+  => (Int -> Gen (Closure (a->b->c))) -> Int -> Gen (Closure (b->a->c))
+gflip g i = (cap (static flip)) <$> g i
+
+gap
+  :: Typeable a
+  => (Int -> Gen (Closure (a->b)))
+  -> (Int -> Gen (Closure a))
+  -> Int -> Gen (Closure b)
+gap gf gx i = do
+  f <- gf i
+  x <- gx i
+  return $ f `cap` x
 
 -- | Generate closures of a given type by randomly choosing to make the closure
 -- a 'cap'. Stays within the boundaries of 'Sig' so that the type of the
@@ -133,14 +149,6 @@ instance Arbitrary (StaticPtr (Bool -> Int)) where
        [ static (bool 0 1)
        , static (bool 57 42)]
 
-instance Arbitrary (StaticPtr (Int -> Bool)) where
-  arbitrary =
-      elements
-        [ static (== 0)
-        , static (<= 0)
-        , static (> 0)
-        ]
-
 instance Arbitrary (StaticPtr (Bool -> Bool)) where
   arbitrary =
     elements
@@ -157,17 +165,11 @@ instance Arbitrary (StaticPtr (Int -> Int -> Int)) where
         , static (\x y -> 2*x + y)
         ]
 
-instance Arbitrary (StaticPtr (Bool -> Int -> Int)) where
-  arbitrary =
-    elements
-      [ static (\b n -> if b then n else -n)
-      , static (flip const)
-      ]
-
 instance Arbitrary (StaticPtr (Int -> Bool -> Int)) where
   arbitrary =
     elements
       [ static const
+      , static (\n b -> if b then n else -n)
       , static (bool 0)
       ]
 
@@ -183,7 +185,9 @@ instance Arbitrary (StaticPtr (Int -> Int -> Bool)) where
     elements
       [ static (==)
       , static (>=)
+      , static (<=)
       , static (<)
+      , static (>)
       ]
 
 instance Arbitrary (StaticPtr (Bool -> Int -> Bool)) where
@@ -192,13 +196,8 @@ instance Arbitrary (StaticPtr (Bool -> Int -> Bool)) where
       [ static const
       , static (\b n -> b && (n >= 0))
       , static (\b n -> b || (n < 0))
+      , static (\b n -> if b then n >=0 else n < 0)
       ]
-
-instance Arbitrary (StaticPtr (Int -> Bool -> Bool)) where
-  arbitrary =
-    elements
-      [ static (flip const)
-      , static (\n b -> if b then n >=0 else n < 0)]
 
 instance Arbitrary (StaticPtr (Bool -> Bool -> Bool)) where
   arbitrary =
