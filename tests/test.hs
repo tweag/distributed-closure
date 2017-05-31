@@ -205,6 +205,8 @@ instance Arbitrary (Closure (Int -> Int)) where
 instance Show (Closure a) where
   show _ = "<closure>"
 
+-- | Extensional equality on closures (/i.e./ closures are equal if they
+-- represent equal values)
 instance Eq a => Eq (Closure a) where
   cl1 == cl2 =
     unclosure cl1 == unclosure cl2
@@ -229,11 +231,11 @@ main = hspec $ do
       prop "composition" $ \(u :: Closure (Int -> Int))
                             (v :: Closure (Int -> Int))
                             (w :: Closure Int) ->
-        unclosure (closure (static (.)) `cap` u `cap` v `cap` w) ==
-        unclosure (u `cap` (v `cap` w))
+        closure (static (.)) `cap` u `cap` v `cap` w ==
+        u `cap` (v `cap` w)
       prop "homomorphism" $ \(f :: Closure (Int -> Int)) x ->
         unclosure (f `cap` x) == (unclosure f) (unclosure x)
 
     describe "serialization" $ do
       prop "decode is left inverse to encode" $ \v ->
-          unclosure ((decode . encode) v) == unclosure (v :: Closure Int)
+          (decode . encode) v == (v :: Closure Int)
