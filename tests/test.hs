@@ -29,16 +29,20 @@ withStatic [d|
 
 -- * Basic generators (parameterized by size)
 
+-- | Generates a basic closure using @cpure@
 genPure :: forall a. (Static (Serializable a), Arbitrary a) => Int -> Gen (Closure a)
 genPure i =
     cpure (closureDict :: Closure (Dict (Serializable a))) <$>
       resize (max 0 (i-1)) arbitrary
 
+-- | Generates a basic closure using @closure@
 genStatic :: Arbitrary (StaticPtr a) => Int -> Gen (Closure a)
 -- static pointers are considered to contribute 0 to the size, hence ignore the
 -- size parameter.
 genStatic _i = closure <$> arbitrary
 
+-- | Reifies basic datatypes (they must be @Serializable@ types). Only two types
+-- here because we already have to enumerate a lot of cases manually (see below).
 data Type a where
   TInt :: Type Int
   TBool :: Type Bool
@@ -49,22 +53,27 @@ instance Static (Serializable Int) where
 instance Static (Serializable Bool) where
   closureDict = static Dict
 
+-- | Existentially quantified version of 'Type'. So that they can be generated.
 data AType where AType :: Typeable a => Type a -> AType
 
 instance Arbitrary (AType) where
   arbitrary =
       elements [ AType TInt, AType TBool ]
 
+-- | Composed types. Very few choices because of the combinatorics.
 data Sig a where
   Zero :: Type a -> Sig a
   One :: Type a -> Type b -> Sig (a->b)
   Two :: Type a -> Type b -> Type c -> Sig (a->b->c)
 
+-- | Extend a type with an extra parameter. May fail since functions in 'Sig'
+-- have a maximum of two arguments.
 push :: Type a -> Sig b -> Maybe (Sig (a -> b))
 push a (Zero b) = Just $ One a b
 push a (One b c) = Just $ Two a b c
 push _ (Two _ _ _) = Nothing
 
+-- | Non-recursive generator of atomic values for each type.
 genSimple :: Sig a -> Int -> Gen (Closure a)
 genSimple (Zero TInt) = genPure
 genSimple (Zero TBool) = genPure
@@ -81,6 +90,9 @@ genSimple (Two TBool TInt TBool) = genStatic
 genSimple (Two TInt TBool TBool) = genStatic
 genSimple (Two TBool TBool TBool) = genStatic
 
+-- | Generate closures of a given type by randomly choosing to make the closure
+-- a 'cap'. Stays within the boundaries of 'Sig' so that the type of the
+-- function is also 'Arbitrary'.
 genClosure :: Sig a -> Int -> Gen (Closure a)
 genClosure sig size | size < 10 =
     genSimple sig size
