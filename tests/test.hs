@@ -225,7 +225,7 @@ main = hspec $ do
 
     describe "laws" $ do
       prop "identity" $ \(v :: Closure Int) ->
-        unclosure (closure (static id) `cap` v) == id (unclosure v)
+        unclosure (static id `cap` v) == id (unclosure v)
       prop "composition" $ \(u :: Closure (Int -> Int))
                             (v :: Closure (Int -> Int))
                             (w :: Closure Int) ->
