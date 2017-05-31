@@ -205,6 +205,9 @@ instance Arbitrary (Closure (Int -> Int)) where
 instance Show (Closure a) where
   show _ = "<closure>"
 
+instance Show (StaticPtr a) where
+  show _ = "<static>"
+
 -- | Extensional equality on closures (/i.e./ closures are equal if they
 -- represent equal values)
 instance Eq a => Eq (Closure a) where
@@ -222,9 +225,11 @@ main = hspec $ do
         (unclosure . cpure $cdict) z == (z :: Maybe Int)
       prop "is inverse to cduplicate" $ \x ->
         (unclosure . cduplicate) x == (x :: Closure Int)
-      it "is inverse to closure" $ do
-        (unclosure . closure) (static id) 0 `shouldBe` (0 :: Int)
-
+      prop "is inverse to closure of id" $ \(x :: Int) ->
+        (unclosure . closure) (static id) x == x
+      prop "is inverse to closure" $ \(f :: StaticPtr (Int -> Int))
+                                      (x :: Int) ->
+        (unclosure . closure) f x == deRefStaticPtr f x
     describe "laws" $ do
       prop "identity" $ \(v :: Closure Int) ->
         unclosure (static id `cap` v) == id (unclosure v)
