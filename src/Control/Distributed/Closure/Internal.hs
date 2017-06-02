@@ -24,6 +24,7 @@ module Control.Distributed.Closure.Internal
   , cpure
   , cap
   , cmap
+  , cduplicate
   ) where
 
 import Data.Binary (Binary(..), Get, Put, decode, encode)
@@ -53,6 +54,7 @@ data Closure a where
   StaticPtr :: !(StaticPtr a) -> Closure a
   Encoded :: !ByteString -> Closure ByteString
   Ap :: !(Closure (a -> b)) -> !(Closure a) -> Closure b
+  Duplicate :: Closure a -> Closure (Closure a)
   -- Cache the value a closure resolves to.
   Closure :: a -> !(Closure a) -> Closure a
 
@@ -79,6 +81,10 @@ dynClosureApply (DynClosure x1) (DynClosure x2) =
       (clos1 :: Closure (a -> b)) -> case unsafeCoerce x2 of
         (clos2 :: Closure a) -> DynClosure $ unsafeCoerce $ Ap clos1 clos2
 
+dynClosureDuplicate :: DynClosure -> DynClosure
+dynClosureDuplicate (DynClosure x) =
+    DynClosure $ unsafeCoerce $ Duplicate $ unsafeCoerce x
+
 -- | Until GHC.StaticPtr can give us a proper TypeRep upon decoding, we have to
 -- pretend that serializing/deserializing a @'Closure' a@ without a @'Typeable'
 -- a@ constraint, i.e. for /any/ @a@, is safe.
@@ -87,6 +93,7 @@ putClosure (StaticPtr sptr) = putWord8 0 >> put (staticKey sptr)
 putClosure (Encoded bs) = putWord8 1 >> put bs
 putClosure (Ap clos1 clos2) = putWord8 2 >> putClosure clos1 >> putClosure clos2
 putClosure (Closure _ clos) = putClosure clos
+putClosure (Duplicate clos) = putWord8 3 >> putClosure clos
 
 getDynClosure :: Get DynClosure
 getDynClosure = getWord8 >>= \case
@@ -95,6 +102,7 @@ getDynClosure = getWord8 >>= \case
            Nothing -> fail $ "Static pointer lookup failed: " ++ show key
     1 -> toDynClosure . Encoded <$> get
     2 -> dynClosureApply <$> getDynClosure <*> getDynClosure
+    3 -> dynClosureDuplicate <$> getDynClosure
     _ -> fail "Binary.get(Closure): unrecognized tag."
 
 #if !MIN_VERSION_binary(0,7,6)
@@ -127,6 +135,10 @@ unclosure (StaticPtr sptr) = deRefStaticPtr sptr
 unclosure (Encoded x) = x
 unclosure (Ap cf cx) = (unclosure cf) (unclosure cx)
 unclosure (Closure x _) = x
+unclosure (Duplicate x) = x
+
+cduplicate :: Closure a -> Closure (Closure a)
+cduplicate = Duplicate
 
 decodeD :: Dict (Serializable a) -> ByteString -> a
 decodeD Dict = decode
@@ -154,4 +166,5 @@ cap closf closx = Ap closf closx
 -- over it. That is, we cannot define 'fmap'. However, we can map a static
 -- pointer to a function over a 'Closure'.
 cmap :: Typeable a => StaticPtr (a -> b) -> Closure a -> Closure b
-cmap sptr = cap (Closure (deRefStaticPtr sptr) (StaticPtr sptr))
+cmap sf = cap (closure sf)
+{-# DEPRECATED cmap "Use staticMap instead." #-}
