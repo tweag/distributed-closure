@@ -18,6 +18,7 @@ import           Control.Distributed.Closure
 import           Data.Generics (everything, mkQ)
 import           Data.List (nub)
 import           Data.Typeable (Typeable)
+import           GHC.StaticPtr
 import qualified Language.Haskell.TH as TH
 import qualified Language.Haskell.TH.Syntax as TH
 import           Numeric.Natural
@@ -89,6 +90,9 @@ mangleName name@(TH.Name occ fl) = case fl of
 -- instance (Static (Show a), Typeable a) => Static (Show (T a)) where
 --   closureDict = closure (static (Dict -> Dict)) `cap` closureDict
 -- @
+--
+-- You will probably want to enable @FlexibleContexts@ and @ScopedTypeVariables@
+-- in modules that use 'withStatic'.
 withStatic :: TH.DecsQ -> TH.DecsQ
 withStatic = (>>= go)
   where
@@ -109,11 +113,13 @@ withStatic = (>>= go)
         methods <- (:[]) <$>
           TH.valD
             (TH.varP 'closureDict)
-            (TH.normalB (caps (cstatic f : replicate n [| closureDict |])))
+            (TH.normalB (caps ( [| closure (static $(TH.varE f) :: StaticPtr $(return tyf)) |]
+                              : replicate n [| closureDict |]
+                              )))
             []
         staticcxt <- (++) <$>
-          mapM (\c -> [t| Static $(return c) |]) cxt <*>
-          mapM (\var -> [t| Typeable $(TH.varT var) |]) (fvT tyf)
+          mapM (\d -> [t| Typeable $(return d) |]) (retsig : dictsigs) <*>
+          mapM (\c -> [t| Static   $(return c) |]) cxt
         statichd <- [t| Static $(return hd) |]
 #if MIN_VERSION_template_haskell(2,11,0)
         let staticins = TH.InstanceD overlap staticcxt statichd methods
