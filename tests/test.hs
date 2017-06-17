@@ -36,6 +36,10 @@ instance Arbitrary (Closure (Int -> Int)) where
 instance Show (Closure a) where
   show _ = "<closure>"
 
+instance Eq a => Eq (Closure a) where
+  cl1 == cl2 =
+    unclosure cl1 == unclosure cl2
+
 main :: IO ()
 main = hspec $ do
     describe "unclosure" $ do
@@ -43,6 +47,8 @@ main = hspec $ do
         (unclosure . cpure $cdict) x == (x :: Int) &&
         (unclosure . cpure $cdict) y == (y :: Bool) &&
         (unclosure . cpure $cdict) z == (z :: Maybe Int)
+      prop "is inverse to cduplicate" $ \x ->
+        (unclosure . cduplicate) x == (x :: Closure Int)
       it "is inverse to closure" $ do
         (unclosure . closure) (static id) 0 `shouldBe` (0 :: Int)
 
