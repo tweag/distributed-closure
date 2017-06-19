@@ -9,6 +9,9 @@ jobs:
     - restore_cache:
         key: stack-dependencies
     - run:
+        name: stack setup
+        command: stack --no-terminal setup
+    - run:
         name: build dependencies
         command: stack --no-terminal build --only-snapshot --prefetch --test --bench
     - save_cache:
