@@ -37,7 +37,11 @@ class Typeable f => StaticFunctor f where
   staticMap :: (Typeable a, Typeable b) => Closure (a -> b) -> f a -> f b
 
 class StaticFunctor f => StaticApply f where
-  staticApply :: (Typeable a, Typeable b) => f (a -> b) -> f a -> f b
+  staticApply
+    :: (Typeable a, Typeable b)
+    => f (Closure (a -> b))
+    -> f a
+    -> f b
 
 class StaticApply f => StaticApplicative f where
   staticPure :: Typeable a => a -> f a
@@ -79,7 +83,7 @@ instance StaticFunctor Closure where
   staticMap = cap
 
 instance StaticApply Closure where
-  staticApply = cap
+  staticApply = cap . unclosure
 
 instance StaticBind Closure where
   staticBind m k = unclosure k (unclosure m)
