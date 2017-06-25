@@ -33,9 +33,30 @@ module Control.Distributed.Closure.Class
 import Control.Distributed.Closure
 import Data.Typeable (Typeable)
 
+-- | Instances of 'StaticFunctor' should satisfy the following laws:
+--
+-- @
+-- 'staticMap' (static 'id') = 'id'
+-- 'staticMap' (static (.) ``cap`` f ``cap`` g) = 'staticMap' f . 'staticMap' g
+-- @
 class Typeable f => StaticFunctor f where
   staticMap :: (Typeable a, Typeable b) => Closure (a -> b) -> f a -> f b
 
+-- | Instances of 'StaticApply' should satisfy the following laws (writing
+-- 'staticMap', 'staticApply' as infix @('<$>')@, @('<*>')@, respectively):
+--
+-- @
+-- cduplicate staticCompose '<$>' u '<*>' v '<*>' w = u '<*>' (v '<*>' w)
+-- x '<*>' (f '<$>' y) = (cduplicate (flip staticCompose) ``cap`` f) '<$>' x '<*>' y
+-- f '<$>' (x '<*>' y) = (cduplicate staticCompose ``cap`` f) '<$>' x '<*>' y
+-- @
+--
+-- where
+--
+-- @
+-- staticCompose :: Closure (b -> c) -> Closure (a -> b) -> Closure (a -> c)
+-- staticCompose f g = static (.) ``cap`` f ``cap`` g
+-- @
 class StaticFunctor f => StaticApply f where
   staticApply
     :: (Typeable a, Typeable b)
@@ -46,6 +67,14 @@ class StaticFunctor f => StaticApply f where
 class StaticApply f => StaticApplicative f where
   staticPure :: Typeable a => a -> f a
 
+-- | Instances of 'StaticBind' should satisfy the following laws (writing
+-- 'staticMap', 'staticApply', 'staticBind' as infix @('<$>')@, @('<*>')@, @(>>=)@,
+-- respectively):
+--
+-- @
+-- (m >>= f) >>= g = m >>= static (.) ``cap`` (static (>>=) ``cap`` g) ``cap`` f
+-- 'staticJoin' . 'staticJoin' = 'staticJoin' . 'staticMap' (static 'staticJoin')
+-- @
 class StaticApply m => StaticBind m where
   staticBind :: (Typeable a, Typeable b) => m a -> Closure (a -> m b) -> m b
   staticBind m k = staticJoin (staticMap k m)
