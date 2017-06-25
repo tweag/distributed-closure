@@ -26,6 +26,7 @@ module Control.Distributed.Closure.Class
   , StaticApplicative(..)
   , StaticMonad
   , staticReturn
+  , StaticExtend(..)
   , StaticComonad(..)
   ) where
 
@@ -56,16 +57,23 @@ instance (StaticApplicative m, StaticBind m) => StaticMonad m
 staticReturn :: (StaticApplicative m, Typeable a) => a -> m a
 staticReturn = staticPure
 
-class StaticFunctor w => StaticComonad w where
-  staticExtract :: Typeable a => w a -> a
-
+-- | Instances of 'StaticExtend' should satisfy the following laws:
+--
+-- @
+-- 'staticExtend' f = 'staticMap' f . 'staticDuplicate'
+-- 'staticDuplicate' = 'staticExtend' (static 'id')
+-- @
+class StaticFunctor w => StaticExtend w where
   staticDuplicate :: Typeable a => w a -> w (w a)
   staticDuplicate = staticExtend (static id)
 
   staticExtend :: (Typeable a, Typeable b) => Closure (w a -> b) -> w a -> w b
   staticExtend sf = staticMap sf . staticDuplicate
 
-  {-# MINIMAL staticExtract, (staticDuplicate | staticExtend) #-}
+  {-# MINIMAL staticDuplicate | staticExtend #-}
+
+class StaticExtend w => StaticComonad w where
+  staticExtract :: Typeable a => w a -> a
 
 instance StaticFunctor Closure where
   staticMap = cap
@@ -76,6 +84,8 @@ instance StaticApply Closure where
 instance StaticBind Closure where
   staticBind m k = unclosure k (unclosure m)
 
+instance StaticExtend Closure where
+  staticDuplicate = cduplicate
+
 instance StaticComonad Closure where
   staticExtract = unclosure
-  staticDuplicate = cduplicate
