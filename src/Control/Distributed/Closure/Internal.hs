@@ -23,6 +23,7 @@ module Control.Distributed.Closure.Internal
   , unclosure
   , cpure
   , cap
+  , capDup
   , cmap
   , cduplicate
   ) where
@@ -162,6 +163,10 @@ cap :: Typeable a          -- XXX 'Typeable' constraint only for forward compat.
     -> Closure b
 cap (Closure f closf) (Closure x closx) = Closure (f x) (Ap closf closx)
 cap closf closx = Ap closf closx
+
+-- | Nested closure application.
+capDup :: Typeable a => Closure (Closure a -> b) -> Closure a -> Closure b
+capDup cf = cap cf . cduplicate
 
 -- | 'Closure' is not a 'Functor', in that we cannot map arbitrary functions
 -- over it. That is, we cannot define 'fmap'. However, we can map a static
