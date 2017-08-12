@@ -46,9 +46,9 @@ class Typeable f => StaticFunctor f where
 -- 'staticMap', 'staticApply' as infix @('<$>')@, @('<*>')@, respectively):
 --
 -- @
--- cduplicate staticCompose '<$>' u '<*>' v '<*>' w = u '<*>' (v '<*>' w)
--- x '<*>' (f '<$>' y) = (cduplicate (flip staticCompose) ``cap`` f) '<$>' x '<*>' y
--- f '<$>' (x '<*>' y) = (cduplicate staticCompose ``cap`` f) '<$>' x '<*>' y
+-- static staticCompose '<$>' u '<*>' v '<*>' w = u '<*>' (v '<*>' w)
+-- x '<*>' (f '<$>' y) = (static (flip staticCompose) ``capDup`` f) '<$>' x '<*>' y
+-- f '<$>' (x '<*>' y) = (static staticCompose ``capDup`` f) '<$>' x '<*>' y
 -- @
 --
 -- where
@@ -72,8 +72,15 @@ class StaticApply f => StaticApplicative f where
 -- respectively):
 --
 -- @
--- (m >>= f) >>= g = m >>= static (.) ``cap`` (static (>>=) ``cap`` g) ``cap`` f
+-- (m >>= f) >>= g = m >>= static (.) ``cap`` (staticFlippedBind g) `cap` f
 -- 'staticJoin' . 'staticJoin' = 'staticJoin' . 'staticMap' (static 'staticJoin')
+-- @
+--
+-- where
+--
+-- @
+-- staticFlippedBind :: Closure (b -> m c) -> Closure (m b -> m c)
+-- staticFlippedBind = capDup (static (flip staticBind))
 -- @
 class StaticApply m => StaticBind m where
   staticBind :: (Typeable a, Typeable b) => m a -> Closure (a -> m b) -> m b
