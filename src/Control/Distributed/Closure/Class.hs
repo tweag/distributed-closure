@@ -112,6 +112,66 @@ class StaticFunctor w => StaticExtend w where
 
   {-# MINIMAL staticDuplicate | staticExtend #-}
 
+-- | Instances of 'StaticBifunctor' should satisfy the following laws:
+--
+-- @
+-- 'staticBimap' (static id) (static id) = static id
+-- 'staticFirst' (static id) = static id
+-- 'staticSecond' (static id) = static id
+-- 'staticBimap' f g = staticFirst f . staticSecond g
+-- @
+class Typeable p => StaticBifunctor p where
+  staticBimap
+    :: (Typeable a, Typeable b, Typeable c, Typeable d)
+    => Closure (a -> b) -> Closure (c -> d) -> p a c -> p b d
+  staticBimap sf sg = staticFirst sf . staticSecond sg
+
+  staticFirst
+    :: (Typeable a, Typeable b, Typeable c)
+    => Closure (a -> b) -> p a c -> p b c
+  staticFirst sf = staticBimap sf (static id)
+
+  staticSecond
+    :: (Typeable a, Typeable c, Typeable d)
+    => Closure (c -> d) -> p a c -> p a d
+  staticSecond sg = staticBimap (static id) sg
+
+  {-# MINIMAL staticBimap | staticFirst, staticSecond #-}
+
+-- | Instances of 'StaticProfunctor' should satisfy the following laws:
+--
+-- @
+-- 'staticDimap' (static id) (static id) = static id
+-- 'staticLmap' (static id) = static id
+-- 'staticRmap' (static id) = static id
+-- 'staticDimap' f g = staticLmap f . staticRmap g
+-- @
+class Typeable p => StaticProfunctor p where
+  staticDimap
+    :: (Typeable a, Typeable b, Typeable c, Typeable d)
+    => Closure (a -> b) -> Closure (c -> d) -> p b c -> p a d
+  staticDimap sf sg = staticLmap sf . staticRmap sg
+
+  staticLmap
+    :: (Typeable a, Typeable b, Typeable c)
+    => Closure (a -> b) -> p b c -> p a c
+  staticLmap sf = staticDimap sf (static id)
+
+  staticRmap
+    :: (Typeable a, Typeable c, Typeable d)
+    => Closure (c -> d) -> p a c -> p a d
+  staticRmap sg = staticDimap (static id) sg
+
+  {-# MINIMAL staticDimap | staticLmap, staticRmap #-}
+
+class StaticProfunctor p => Strong p where
+  staticFirst' :: p a b -> p (a, c) (b, c)
+  staticSecond' :: p a b -> p (c, a) (c, b)
+
+class StaticProfunctor p => Choice p where
+  staticLeft' :: p a b -> p (Either a c) (Either b c)
+  staticRight' :: p a b -> p (Either c a) (Either c b)
+
 class StaticExtend w => StaticComonad w where
   staticExtract :: Typeable a => w a -> a
 
