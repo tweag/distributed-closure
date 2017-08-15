@@ -7,7 +7,9 @@
 
 {-# LANGUAGE ConstraintKinds #-}
 {-# LANGUAGE CPP #-}
+{-# LANGUAGE ExplicitNamespaces #-}
 {-# LANGUAGE FunctionalDependencies #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
@@ -25,6 +27,9 @@ module Control.Distributed.Closure
   , cap
   , cmap
   , cduplicate
+    -- * Special closures
+  , WrappedArrowClosure(..)
+  , type (/->)
     -- * Closure dictionaries
     -- $static-dicts
   , Dict(..)
@@ -32,6 +37,7 @@ module Control.Distributed.Closure
   ) where
 
 import Control.Distributed.Closure.Internal
+import Data.Binary (Binary)
 import Data.Constraint (Dict(..))
 
 -- $static-dicts
@@ -52,3 +58,12 @@ import Data.Constraint (Dict(..))
 -- 'Control.Distributed.Closure.TH.withStatic' if it becomes too tedious.
 class c => Static c where
   closureDict :: Closure (Dict c)
+
+-- | A newtype-wrapper useful for defining instances of classes indexed by
+-- higher-kinded types.
+newtype WrappedArrowClosure a b = WrapArrowClosure
+  { unwrapClosureArrow :: Closure (a -> b)
+  } deriving (Binary)
+
+infixr 0 /->
+type (/->) = WrappedArrowClosure

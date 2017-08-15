@@ -11,24 +11,22 @@
 -- difference is that composing static values requires a proof of typeability,
 -- so we carry those around ('Typeable' constraints).
 --
--- This module defines just such a class hierarchy in the category of static
--- functions (aka values of type @'Closure' (a -> b)@).
+-- This module and others define just such a class hierarchy in the category of
+-- static functions (aka values of type @'Closure' (a -> b)@).
 
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE StaticPointers #-}
-{-# LANGUAGE UndecidableInstances #-} -- For StaticMonad instance.
-
-module Control.Distributed.Closure.Class
-  ( Static(..)
-  , StaticFunctor(..)
-  , StaticApply(..)
-  , StaticBind(..)
-  , StaticApplicative(..)
-  , StaticMonad
-  , staticReturn
-  , StaticExtend(..)
-  , StaticComonad(..)
-  ) where
+module Data.Functor.Static where
 
 import Control.Distributed.Closure
 import Data.Typeable (Typeable)
+
+-- | Instances of 'StaticFunctor' should satisfy the following laws:
+--
+-- @
+-- 'staticMap' (static 'id') = 'id'
+-- 'staticMap' (static (.) ``cap`` f ``cap`` g) = 'staticMap' f . 'staticMap' g
+-- @
+class Typeable f => StaticFunctor f where
+  staticMap :: (Typeable a, Typeable b) => Closure (a -> b) -> f a -> f b
+
+instance StaticFunctor Closure where
+  staticMap = cap
