@@ -11,6 +11,8 @@ import Data.Typeable (Typeable)
 -- @
 -- 'staticExtend' f = 'staticMap' f . 'staticDuplicate'
 -- 'staticDuplicate' = 'staticExtend' (static 'id')
+-- 'staticExtend' f . 'staticExtend' g = 'staticExtend' (static (.) `cap` f `cap` 'staticExtend' g)
+-- 'staticDuplicate' . 'staticDuplicate' = 'staticMap' (static 'staticDuplicate') . 'staticDuplicate'
 -- @
 class StaticFunctor w => StaticExtend w where
   staticDuplicate :: Typeable a => w a -> w (w a)
