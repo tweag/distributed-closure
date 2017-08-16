@@ -18,9 +18,16 @@ source-repository head
   location: https://github.com/tweag/distributed-closure
 
 library
-  exposed-modules:     Control.Distributed.Closure
+  exposed-modules:     Control.Applicative.Static
+                       Control.Comonad.Static
+                       Control.Distributed.Closure
                        Control.Distributed.Closure.Internal
                        Control.Distributed.Closure.TH
+                       Control.Monad.Static
+                       Data.Profunctor.Static
+                       Data.Profunctor.Choice.Static
+                       Data.Profunctor.Strong.Static
+                       Data.Functor.Static
   build-depends:       base >=4.8 && <5
                      , binary >= 0.7.5
                      , bytestring >= 0.10
