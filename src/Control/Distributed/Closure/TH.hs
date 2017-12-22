@@ -118,7 +118,10 @@ withStatic = (>>= go)
                               )))
             []
         staticcxt <- (++) <$>
-          mapM (\d -> [t| Typeable $(return d) |]) (retsig : dictsigs) <*>
+          sequence [ [t| Typeable $(return d) |]
+                   | d <- retsig : dictsigs
+                   , not (null (fvT d))
+                   ] <*>
           mapM (\c -> [t| Static   $(return c) |]) cxt
         statichd <- [t| Static $(return hd) |]
 #if MIN_VERSION_template_haskell(2,11,0)
