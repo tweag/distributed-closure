@@ -1,5 +1,5 @@
 name:                distributed-closure
-version:             0.3.5
+version:             0.4.0
 synopsis:            Serializable closures for distributed programming.
 description:         See README.
 homepage:            https://github.com/tweag/distributed-closure

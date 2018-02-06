@@ -8,9 +8,13 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 
 ### Added
 
-* Check for ScopedTypeVariables being enabled when using withStatic.
-
 ### Changed
+
+## [0.4.0] - 2018-02-06
+
+### Added
+
+* Check for ScopedTypeVariables being enabled when using withStatic.
 
 ## [0.3.5] - 2018-02-01
 
