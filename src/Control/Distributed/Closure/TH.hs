@@ -13,7 +13,7 @@ module Control.Distributed.Closure.TH
   , withStatic
   ) where
 
-import           Control.Monad (replicateM)
+import           Control.Monad (replicateM, unless)
 import           Control.Distributed.Closure
 import           Data.Generics (everything, mkQ)
 import           Data.List (nub)
@@ -96,6 +96,13 @@ mangleName name@(TH.Name occ fl) = case fl of
 withStatic :: TH.DecsQ -> TH.DecsQ
 withStatic = (>>= go)
   where
+    checkExtension :: TH.Extension -> TH.Q ()
+    checkExtension ext = do
+      enabled <- TH.isExtEnabled TH.ScopedTypeVariables
+      unless enabled $
+        fail $ "withStatic requires the language extension " ++ show ext
+
+    go :: [TH.Dec] -> TH.DecsQ
     go [] = return []
 #if MIN_VERSION_template_haskell(2,11,0)
     go (ins@(TH.InstanceD overlap cxt hd _):decls) = do
@@ -117,11 +124,14 @@ withStatic = (>>= go)
                               : replicate n [| closureDict |]
                               )))
             []
-        staticcxt <- (++) <$>
+        typeableConstraints <-
           sequence [ [t| Typeable $(return d) |]
                    | d <- retsig : dictsigs
                    , not (null (fvT d))
-                   ] <*>
+                   ]
+        unless (null typeableConstraints) $
+          checkExtension TH.ScopedTypeVariables
+        staticcxt <- (typeableConstraints ++) <$>
           mapM (\c -> [t| Static   $(return c) |]) cxt
         statichd <- [t| Static $(return hd) |]
 #if MIN_VERSION_template_haskell(2,11,0)
