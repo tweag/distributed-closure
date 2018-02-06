@@ -5,6 +5,7 @@
 {-# LANGUAGE StaticPointers #-}
 {-# LANGUAGE TemplateHaskell #-}
 {-# LANGUAGE TypeApplications #-}
+{-# LANGUAGE TypeFamilies #-}
 
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
@@ -21,11 +22,17 @@ import Test.Hspec.QuickCheck
 import Test.QuickCheck
 
 data T a = T a
+data T1 a b = T1 a b
+data T2 = T2
+
+type family F a
 
 -- Test that the result of this splice compiles.
 withStatic [d|
   instance Show a => Show (T a) where show = undefined
   instance (Eq a, Show a) => Eq (T a) where (==) = undefined
+  instance Show (F a) => Show (T1 a b) where show = undefined
+  instance Show T2 where show = undefined
   |]
 
 -- * Basic generators (parameterized by size)
