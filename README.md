@@ -35,6 +35,11 @@ main = do
   spawn "someAddress" (static hello `cap` name)
 ```
 
+An example of sending static pointers and closures
+through a communication channel is provided under
+[examples/ClientServer.hs](examples/ClientServer.hs)
+in the source repository.
+
 `distributed-closure` does not implement sending/receiving/spawning
 closures - that's left for higher-level frameworks. Only closure
 creation, composition and (de)serialization.
