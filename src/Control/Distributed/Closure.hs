@@ -11,6 +11,7 @@
 {-# LANGUAGE FunctionalDependencies #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
+{-# LANGUAGE StaticPointers #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE UndecidableInstances #-}
 #if __GLASGOW_HASKELL__ >= 800
@@ -39,6 +40,7 @@ module Control.Distributed.Closure
 import Control.Distributed.Closure.Internal
 import Data.Binary (Binary)
 import Data.Constraint (Dict(..))
+import Data.Typeable (Typeable)
 
 -- $static-dicts
 --
@@ -58,6 +60,13 @@ import Data.Constraint (Dict(..))
 -- 'Control.Distributed.Closure.TH.withStatic' if it becomes too tedious.
 class c => Static c where
   closureDict :: Closure (Dict c)
+
+instance (Static c1, Static c2, Typeable c1, Typeable c2, (c1, c2)) => Static (c1, c2) where
+  closureDict = static pairDict `cap` closureDict `cap` closureDict
+
+-- Needs to be defined at top-level for GHC <8.4 compat.
+pairDict :: Dict c1 -> Dict c2 -> Dict (c1, c2)
+pairDict Dict Dict = Dict
 
 -- | A newtype-wrapper useful for defining instances of classes indexed by
 -- higher-kinded types.

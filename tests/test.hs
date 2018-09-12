@@ -55,11 +55,11 @@ data Type a where
   TInt :: Type Int
   TBool :: Type Bool
 
-instance Static (Serializable Int) where
-  closureDict = static Dict
+instance Static (Binary Int) where closureDict = static Dict
+instance Static (Typeable Int) where closureDict = static Dict
 
-instance Static (Serializable Bool) where
-  closureDict = static Dict
+instance Static (Binary Bool) where closureDict = static Dict
+instance Static (Typeable Bool) where closureDict = static Dict
 
 -- | Existentially quantified version of 'Type'. So that they can be generated.
 data AType where AType :: Typeable a => Type a -> AType
