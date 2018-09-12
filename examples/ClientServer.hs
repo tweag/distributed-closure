@@ -82,7 +82,7 @@ double = (*2)
 newtype SerializableInt = SI Int deriving (Generic, Typeable)
 withStatic [d|
   instance Binary SerializableInt
-  instance Serializable SerializableInt
+  instance Typeable SerializableInt
   |]
 
 -- | Demonstration of client server interactions.

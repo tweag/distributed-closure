@@ -92,7 +92,9 @@ mangleName name@(TH.Name occ fl) = case fl of
 -- @
 --
 -- You will probably want to enable @FlexibleContexts@ and @ScopedTypeVariables@
--- in modules that use 'withStatic'.
+-- in modules that use 'withStatic'. 'withStatic' can also handle non-user
+-- generated instances like 'Typeable' instances: just write @instance Typeable
+-- T@.
 withStatic :: TH.DecsQ -> TH.DecsQ
 withStatic = (>>= go)
   where
@@ -140,5 +142,9 @@ withStatic = (>>= go)
         let staticins = TH.InstanceD staticcxt statichd methods
 #endif
         decls' <- go decls
-        return (ins : sigf : declf : staticins : decls')
+        case hd of
+          TH.AppT (TH.ConT nm) _ | nm == ''Typeable ->
+            return (sigf : declf : staticins : decls')
+          _ ->
+            return (ins : sigf : declf : staticins : decls')
     go (decl:decls) = (decl:) <$> go decls
