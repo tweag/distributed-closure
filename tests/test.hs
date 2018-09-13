@@ -19,7 +19,7 @@ import Data.Typeable
 import GHC.StaticPtr
 import Test.Hspec
 import Test.Hspec.QuickCheck
-import Test.QuickCheck
+import qualified Test.QuickCheck as QC
 
 data T a = T a
 data T1 a b = T1 a b
@@ -38,16 +38,16 @@ withStatic [d|
 -- * Basic generators (parameterized by size)
 
 -- | Generates a basic closure using @cpure@
-genPure :: forall a. (Static (Serializable a), Arbitrary a) => Int -> Gen (Closure a)
+genPure :: forall a. (Static (Serializable a), QC.Arbitrary a) => Int -> QC.Gen (Closure a)
 genPure i =
     cpure (closureDict :: Closure (Dict (Serializable a))) <$>
-      resize (max 0 (i-1)) arbitrary
+      QC.resize (max 0 (i-1)) QC.arbitrary
 
 -- | Generates a basic closure using @closure@
-genStatic :: Arbitrary (StaticPtr a) => Int -> Gen (Closure a)
+genStatic :: QC.Arbitrary (StaticPtr a) => Int -> QC.Gen (Closure a)
 -- static pointers are considered to contribute 0 to the size, hence ignore the
 -- size parameter.
-genStatic _i = closure <$> arbitrary
+genStatic _i = closure <$> QC.arbitrary
 
 -- | Reifies basic datatypes (they must be @Serializable@ types). Only two types
 -- here because we already have to enumerate a lot of cases manually (see below).
@@ -55,18 +55,18 @@ data Type a where
   TInt :: Type Int
   TBool :: Type Bool
 
-instance Static (Serializable Int) where
-  closureDict = static Dict
+instance Static (Binary Int) where closureDict = static Dict
+instance Static (Typeable Int) where closureDict = static Dict
 
-instance Static (Serializable Bool) where
-  closureDict = static Dict
+instance Static (Binary Bool) where closureDict = static Dict
+instance Static (Typeable Bool) where closureDict = static Dict
 
 -- | Existentially quantified version of 'Type'. So that they can be generated.
 data AType where AType :: Typeable a => Type a -> AType
 
-instance Arbitrary (AType) where
+instance QC.Arbitrary (AType) where
   arbitrary =
-      elements [ AType TInt, AType TBool ]
+      QC.elements [ AType TInt, AType TBool ]
 
 -- | Composed types. Very few choices because of the combinatorics.
 data Sig a where
@@ -82,7 +82,7 @@ push a (One b c) = Just $ Two a b c
 push _ (Two _ _ _) = Nothing
 
 -- | Non-recursive generator of atomic values for each type.
-genSimple :: Sig a -> Int -> Gen (Closure a)
+genSimple :: Sig a -> Int -> QC.Gen (Closure a)
 genSimple (Zero TInt) = genPure
 genSimple (Zero TBool) = genPure
 genSimple (One TInt TInt) = genStatic
@@ -100,14 +100,14 @@ genSimple (Two TBool TBool TBool) = genStatic
 
 gflip
   :: (Typeable a, Typeable b, Typeable c)
-  => (Int -> Gen (Closure (a->b->c))) -> Int -> Gen (Closure (b->a->c))
+  => (Int -> QC.Gen (Closure (a->b->c))) -> Int -> QC.Gen (Closure (b->a->c))
 gflip g i = (cap (static flip)) <$> g i
 
 gap
   :: Typeable a
-  => (Int -> Gen (Closure (a->b)))
-  -> (Int -> Gen (Closure a))
-  -> Int -> Gen (Closure b)
+  => (Int -> QC.Gen (Closure (a->b)))
+  -> (Int -> QC.Gen (Closure a))
+  -> Int -> QC.Gen (Closure b)
 gap gf gx i = do
   f <- gf i
   x <- gx i
@@ -115,18 +115,18 @@ gap gf gx i = do
 
 -- | Generate closures of a given type by randomly choosing to make the closure
 -- a 'cap'. Stays within the boundaries of 'Sig' so that the type of the
--- function is also 'Arbitrary'.
-genClosure :: Sig a -> Int -> Gen (Closure a)
+-- function is also 'QC.Arbitrary'.
+genClosure :: Sig a -> Int -> QC.Gen (Closure a)
 genClosure sig size | size < 10 =
     genSimple sig size
 genClosure sig size = do
-    stop <- frequency [(2, return True), (1, return False)]
+    stop <- QC.frequency [(2, return True), (1, return False)]
     if stop then
       genSimple sig size
     else do
       let upper = div size 3
           lower = max 0 (size - 1 - upper)
-      AType pivot <- arbitrary
+      AType pivot <- QC.arbitrary
       case push pivot sig of
         Nothing -> genSimple sig size
         Just sig' -> do
@@ -141,30 +141,30 @@ genClosure sig size = do
 -- Must be from explicit lists since static pointers are, well, static. The
 -- combinatorics is unpleasant.
 
-instance Arbitrary (StaticPtr (Int -> Int)) where
+instance QC.Arbitrary (StaticPtr (Int -> Int)) where
   arbitrary =
-      elements
+      QC.elements
         [ static id
         , static pred
         , static succ
         , static (3*)
         ]
 
-instance Arbitrary (StaticPtr (Bool -> Int)) where
+instance QC.Arbitrary (StaticPtr (Bool -> Int)) where
   arbitrary =
-      elements
+      QC.elements
        [ static (bool 0 1)
        , static (bool 57 42)]
 
-instance Arbitrary (StaticPtr (Bool -> Bool)) where
+instance QC.Arbitrary (StaticPtr (Bool -> Bool)) where
   arbitrary =
-    elements
+    QC.elements
       [ static id
       , static not ]
 
-instance Arbitrary (StaticPtr (Int -> Int -> Int)) where
+instance QC.Arbitrary (StaticPtr (Int -> Int -> Int)) where
   arbitrary =
-      elements
+      QC.elements
         [ static const
         , static (+)
         , static (*)
@@ -172,24 +172,24 @@ instance Arbitrary (StaticPtr (Int -> Int -> Int)) where
         , static (\x y -> 2*x + y)
         ]
 
-instance Arbitrary (StaticPtr (Int -> Bool -> Int)) where
+instance QC.Arbitrary (StaticPtr (Int -> Bool -> Int)) where
   arbitrary =
-    elements
+    QC.elements
       [ static const
       , static (\n b -> if b then n else -n)
       , static (bool 0)
       ]
 
-instance Arbitrary (StaticPtr (Bool -> Bool -> Int)) where
+instance QC.Arbitrary (StaticPtr (Bool -> Bool -> Int)) where
   arbitrary =
-    elements
+    QC.elements
       [ static (\x y -> bool 0 1 (x&&y))
       , static (\x y -> bool 57 42 (x||y))
       ]
 
-instance Arbitrary (StaticPtr (Int -> Int -> Bool)) where
+instance QC.Arbitrary (StaticPtr (Int -> Int -> Bool)) where
   arbitrary =
-    elements
+    QC.elements
       [ static (==)
       , static (>=)
       , static (<=)
@@ -197,28 +197,28 @@ instance Arbitrary (StaticPtr (Int -> Int -> Bool)) where
       , static (>)
       ]
 
-instance Arbitrary (StaticPtr (Bool -> Int -> Bool)) where
+instance QC.Arbitrary (StaticPtr (Bool -> Int -> Bool)) where
   arbitrary =
-    elements
+    QC.elements
       [ static const
       , static (\b n -> b && (n >= 0))
       , static (\b n -> b || (n < 0))
       , static (\b n -> if b then n >=0 else n < 0)
       ]
 
-instance Arbitrary (StaticPtr (Bool -> Bool -> Bool)) where
+instance QC.Arbitrary (StaticPtr (Bool -> Bool -> Bool)) where
   arbitrary =
-    elements
+    QC.elements
       [ static (&&)
       , static (||)]
 
 -- * Instances
 
-instance Arbitrary (Closure Int) where
-  arbitrary = sized $ genClosure (Zero TInt)
+instance QC.Arbitrary (Closure Int) where
+  arbitrary = QC.sized $ genClosure (Zero TInt)
 
-instance Arbitrary (Closure (Int -> Int)) where
-  arbitrary = sized $ genClosure (One TInt TInt)
+instance QC.Arbitrary (Closure (Int -> Int)) where
+  arbitrary = QC.sized $ genClosure (One TInt TInt)
 
 instance Show (Closure a) where
   show _ = "<closure>"
