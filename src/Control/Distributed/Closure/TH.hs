@@ -75,7 +75,7 @@ mangleName name@(TH.Name occ fl) = case fl of
     TH.NameU u -> TH.Name (mangle_occ u) fl
     _ -> name
   where
-    mangle_occ :: Int -> TH.OccName
+    mangle_occ :: TH.Uniq -> TH.OccName
     mangle_occ uniq = TH.mkOccName (TH.occString occ ++ "_" ++ show uniq)
 
 -- | Auto-generates the 'Static' instances corresponding to the given class
