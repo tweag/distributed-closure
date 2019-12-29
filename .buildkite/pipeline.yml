@@ -1,4 +1,6 @@
 steps:
   - label: "Run tests"
-    command: nix-shell --run 'stack build --pedantic --test'
+    command: |
+      . /var/lib/buildkite-agent/.nix-profile/etc/profile.d/nix.sh
+      nix-shell --run 'stack build --pedantic --test'
     timeout: 10
