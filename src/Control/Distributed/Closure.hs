@@ -62,11 +62,37 @@ class c => Static c where
   closureDict :: Closure (Dict c)
 
 instance (Static c1, Static c2, Typeable c1, Typeable c2, (c1, c2)) => Static (c1, c2) where
-  closureDict = static pairDict `cap` closureDict `cap` closureDict
+  closureDict = static f `cap` closureDict `cap` closureDict
+    where
+      f :: Dict c1 -> Dict c2 -> Dict (c1, c2)
+      f Dict Dict = Dict
 
--- Needs to be defined at top-level for GHC <8.4 compat.
-pairDict :: Dict c1 -> Dict c2 -> Dict (c1, c2)
-pairDict Dict Dict = Dict
+instance (Static c1, Static c2, Static c3, Typeable c1, Typeable c2, Typeable c3, (c1, c2, c3)) => Static (c1, c2, c3) where
+  closureDict = static f `cap` closureDict `cap` closureDict `cap` closureDict
+    where
+      f :: Dict c1 -> Dict c2 -> Dict c3 -> Dict (c1, c2, c3)
+      f Dict Dict Dict = Dict
+
+instance (Static c1, Static c2, Static c3, Static c4, Typeable c1, Typeable c2, Typeable c3, Typeable c4, (c1, c2, c3, c4)) => Static (c1, c2, c3, c4) where
+  closureDict = static f `cap` closureDict `cap` closureDict `cap` closureDict `cap` closureDict
+    where
+      f :: Dict c1 -> Dict c2 -> Dict c3 -> Dict c4 -> Dict (c1, c2, c3, c4)
+      f Dict Dict Dict Dict = Dict
+
+instance (Static c1, Static c2, Static c3, Static c4, Static c5, Typeable c1, Typeable c2, Typeable c3, Typeable c4, Typeable c5, (c1, c2, c3, c4, c5)) => Static (c1, c2, c3, c4, c5) where
+  closureDict = static f `cap` closureDict `cap` closureDict `cap` closureDict `cap` closureDict `cap` closureDict
+    where
+      f :: Dict c1 -> Dict c2 -> Dict c3 -> Dict c4 -> Dict c5 -> Dict (c1, c2, c3, c4, c5)
+      f Dict Dict Dict Dict Dict = Dict
+
+instance (Static c1, Static c2, Static c3, Static c4, Static c5, Static c6, Typeable c1, Typeable c2, Typeable c3, Typeable c4, Typeable c5, Typeable c6, (c1, c2, c3, c4, c5, c6)) => Static (c1, c2, c3, c4, c5, c6) where
+  closureDict = static f `cap` closureDict `cap` closureDict `cap` closureDict `cap` closureDict `cap` closureDict `cap` closureDict
+    where
+      f :: Dict c1 -> Dict c2 -> Dict c3 -> Dict c4 -> Dict c5 -> Dict c6 -> Dict (c1, c2, c3, c4, c5, c6)
+      f Dict Dict Dict Dict Dict Dict = Dict
+
+-- instance (Static c1, Static c2, Typeable c1, Typeable c2, (c1, c2)) => Static (c1, c2) where
+--   closureDict = static pairDict `cap` closureDict `cap` closureDict
 
 -- | A newtype-wrapper useful for defining instances of classes indexed by
 -- higher-kinded types.
