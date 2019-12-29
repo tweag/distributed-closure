@@ -28,7 +28,7 @@ library
                        Data.Profunctor.Choice.Static
                        Data.Profunctor.Strong.Static
                        Data.Functor.Static
-  build-depends:       base >=4.8 && <5
+  build-depends:       base >=4.11 && <5
                      , binary >= 0.7.5
                      , bytestring >= 0.10
                      , constraints >= 0.4
