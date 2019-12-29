@@ -1,6 +1,6 @@
 # distributed-closure
 
-[![Build Status](https://travis-ci.org/tweag/distributed-closure.svg)](https://travis-ci.org/tweag/distributed-closure)
+[![Build status](https://badge.buildkite.com/6fa836ad49cc34388f0db7b65c59ee8a269c89d309b959c55b.svg?branch=master)](https://buildkite.com/tweag-1/distributed-closure)
 
 Leverage the `-XStaticPointers` [extension][staticpointers-extension]
 from GHC 7.10 onwards for distributed programming using lightweight
