@@ -1,0 +1,4 @@
+steps:
+  - label: "Run tests"
+    command: nix-shell --run 'stack build --pedantic --test'
+    timeout: 10
