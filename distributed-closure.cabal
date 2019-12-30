@@ -1,62 +1,66 @@
-name:                distributed-closure
-version:             0.4.2.0
-synopsis:            Serializable closures for distributed programming.
-description:         See README.
-homepage:            https://github.com/tweag/distributed-closure
-license:             BSD3
-license-file:        LICENSE
-author:              Mathieu Boespflug
-maintainer:          m@tweag.io
-copyright:           © Tweag I/O Limited
-category:            Control
-build-type:          Simple
-extra-source-files:  README.md
-cabal-version:       >=1.10
+name: distributed-closure
+version: 0.4.2.0
+synopsis: Serializable closures for distributed programming.
+description: See README.
+homepage: https://github.com/tweag/distributed-closure
+license: BSD3
+license-file: LICENSE
+author: Mathieu Boespflug
+maintainer: m@tweag.io
+copyright: © Tweag I/O Limited
+category: Control
+build-type: Simple
+extra-source-files: README.md
+cabal-version: >=1.10
 
 source-repository head
-  type:     git
+  type: git
   location: https://github.com/tweag/distributed-closure
 
 library
-  exposed-modules:     Control.Applicative.Static
-                       Control.Comonad.Static
-                       Control.Distributed.Closure
-                       Control.Distributed.Closure.Internal
-                       Control.Distributed.Closure.TH
-                       Control.Monad.Static
-                       Data.Profunctor.Static
-                       Data.Profunctor.Choice.Static
-                       Data.Profunctor.Strong.Static
-                       Data.Functor.Static
-  build-depends:       base >=4.11 && <5
-                     , binary >= 0.7.5
-                     , bytestring >= 0.10
-                     , constraints >= 0.4
-                     , syb >= 0.5
-                     , template-haskell >= 2.10
-  hs-source-dirs:      src
-  default-language:    Haskell2010
-  ghc-options:         -Wall
+  exposed-modules:
+    Control.Applicative.Static
+    Control.Comonad.Static
+    Control.Distributed.Closure
+    Control.Distributed.Closure.Internal
+    Control.Distributed.Closure.TH
+    Control.Monad.Static
+    Data.Profunctor.Static
+    Data.Profunctor.Choice.Static
+    Data.Profunctor.Strong.Static
+    Data.Functor.Static
+  build-depends:
+    base >=4.11 && <5,
+    binary >= 0.7.5,
+    bytestring >= 0.10,
+    constraints >= 0.4,
+    syb >= 0.5,
+    template-haskell >= 2.10
+  hs-source-dirs: src
+  default-language: Haskell2010
+  ghc-options: -Wall
 
 test-suite tests
-  type:             exitcode-stdio-1.0
+  type: exitcode-stdio-1.0
   default-language: Haskell2010
-  hs-source-dirs:   tests
-  main-is:          test.hs
-  ghc-options:      -Wall
-  Build-Depends:    base >= 4.8,
-                    binary >= 0.7,
-                    distributed-closure,
-                    hspec >= 2.1,
-                    QuickCheck >= 2.8
+  hs-source-dirs: tests
+  main-is: test.hs
+  ghc-options: -Wall
+  build-depends:
+    base >= 4.8,
+    binary >= 0.7,
+    distributed-closure,
+    hspec >= 2.1,
+    QuickCheck >= 2.8
 
 executable example-client-server
-  main-is:          ClientServer.hs
-  hs-source-dirs:   examples
+  main-is: ClientServer.hs
+  hs-source-dirs: examples
   default-language: Haskell2010
-  ghc-options:      -Wall
-  build-depends:    base >= 4.8
-                  , async >= 2.1
-                  , binary >= 0.7
-                  , bytestring >= 0.10
-                  , distributed-closure
+  ghc-options: -Wall
+  build-depends:
+    base >= 4.8,
+    async >= 2.1,
+    binary >= 0.7,
+    bytestring >= 0.10,
+    distributed-closure
