@@ -36,7 +36,7 @@ class StaticApply m => StaticBind m where
 class (StaticApplicative m, StaticBind m) => StaticMonad m
 instance (StaticApplicative m, StaticBind m) => StaticMonad m
 
-staticReturn :: (StaticApplicative m, Typeable a) => a -> m a
+staticReturn :: (StaticApplicative m, Typeable a) => Closure a -> m a
 staticReturn = staticPure
 
 instance StaticBind Closure where
