@@ -4,7 +4,7 @@ synopsis: Serializable closures for distributed programming.
 description: See README.
 homepage: https://github.com/tweag/distributed-closure
 license: BSD3
-license-file: LICENSE
+license-file: LICENSE.md
 author: Mathieu Boespflug
 maintainer: m@tweag.io
 copyright: © Tweag I/O Limited
