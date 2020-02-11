@@ -1,11 +1,3 @@
-{pkgs ? import ./nixpkgs.nix {}}:
+{ pkgs ? (import ./nix/nixpkgs) }:
 
-with pkgs;
-
-mkShell {
-  LANG="C.UTF-8";
-  buildInputs = [
-    ghc
-    stack
-  ];
-}
+(import ./default.nix { inherit pkgs; }).shell

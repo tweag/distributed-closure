@@ -1,7 +1,0 @@
-resolver: lts-14.19
-packages:
-- '.'
-
-system-ghc: true
-nix:
-  enable: false
