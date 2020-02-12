@@ -17,6 +17,11 @@ source-repository head
   type: git
   location: https://github.com/tweag/distributed-closure
 
+flag dev
+  description: Turn on development settings.
+  manual: True
+  default: False
+
 library
   exposed-modules:
     Control.Applicative.Static
@@ -38,29 +43,47 @@ library
     template-haskell >= 2.10
   hs-source-dirs: src
   default-language: Haskell2010
-  ghc-options: -Wall
+  if flag(dev)
+    ghc-options: -Wall -Werror -Wcompat
+                 -Wincomplete-record-updates
+                 -Wincomplete-uni-patterns
+                 -Wnoncanonical-monad-instances
+  else
+    ghc-options: -Wall
 
 test-suite tests
   type: exitcode-stdio-1.0
   default-language: Haskell2010
   hs-source-dirs: tests
   main-is: test.hs
-  ghc-options: -Wall
   build-depends:
     base >= 4.8,
     binary >= 0.7,
     distributed-closure,
     hspec >= 2.1,
     QuickCheck >= 2.8
+  if flag(dev)
+    ghc-options: -Wall -Werror -Wcompat
+                 -Wincomplete-record-updates
+                 -Wincomplete-uni-patterns
+                 -Wnoncanonical-monad-instances
+  else
+    ghc-options: -Wall
 
 executable example-client-server
   main-is: ClientServer.hs
   hs-source-dirs: examples
   default-language: Haskell2010
-  ghc-options: -Wall
   build-depends:
     base >= 4.8,
     async >= 2.1,
     binary >= 0.7,
     bytestring >= 0.10,
     distributed-closure
+  if flag(dev)
+    ghc-options: -Wall -Werror -Wcompat
+                 -Wincomplete-record-updates
+                 -Wincomplete-uni-patterns
+                 -Wnoncanonical-monad-instances
+  else
+    ghc-options: -Wall

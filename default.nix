@@ -13,7 +13,8 @@ let
     overrides = distributedClosureOverlay;
   };
   distributedClosureOverlay = self: super: {
-    "distributed-closure" = super.callCabal2nix "distributed-closure" source { };
+    "distributed-closure" = pkgs.haskell.lib.enableCabalFlag
+      (super.callCabal2nix "distributed-closure" source { }) "dev";
   };
 in {
   distributed-closure = haskellPackages.distributed-closure;
