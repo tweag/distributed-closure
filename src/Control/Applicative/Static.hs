@@ -20,7 +20,10 @@ class StaticFunctor f => StaticApply f where
     -> f b
 
 class StaticApply f => StaticApplicative f where
-  staticPure :: Typeable a => a -> f a
+  staticPure :: Typeable a => Closure a -> f a
 
 instance StaticApply Closure where
   staticApply = cap
+
+instance StaticApplicative Closure where
+  staticPure = id
