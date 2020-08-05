@@ -117,7 +117,14 @@ withStatic = (>>= go)
         f <- mangleName <$> TH.newName "static_helper"
         fbody <- foldr (\_ body -> [| \Dict -> $body |]) [| Dict |] cxt
         let tyf = foldr (\a b -> TH.ArrowT `TH.AppT` a `TH.AppT` b) retsig dictsigs
-            sigf = TH.SigD f (TH.ForallT (map TH.PlainTV (fvT tyf)) [] tyf)
+#if MIN_VERSION_template_haskell(2,16,0)
+            specifiedPlainTV :: TH.Name -> TH.TyVarBndr TH.Specificity
+            specifiedPlainTV n = TH.PlainTV n TH.SpecifiedSpec
+#else
+            specifiedPlainTV :: TH.Name -> TH.TyVarBndr
+            specifiedPlainTV = TH.PlainTV
+#endif
+            sigf = TH.SigD f (TH.ForallT (map specifiedPlainTV (fvT tyf)) [] tyf)
             declf = TH.ValD (TH.VarP f) (TH.NormalB fbody) []
         methods <- (:[]) <$>
           TH.valD
