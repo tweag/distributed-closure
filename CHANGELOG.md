@@ -7,8 +7,18 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/).
 ## Next release
 
 ### Added
+### Changed
+## Removed
+
+## [0.5.0] - 2023-11-27
+
+### Added
+
+* Compatibility with template-haskell 2.16 ([#27](https://github.com/tweag/distributed-closure/pull/27))
 
 ### Changed
+
+* Only lift 'Closure's on 'staticPure' ([#25](https://github.com/tweag/distributed-closure/pull/25))
 
 ## [0.4.0] - 2018-02-06
 
